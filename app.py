@@ -1,7 +1,7 @@
 import streamlit as st
 
 # ---- PAGE SETUP ----
-st.set_page_config(page_title="Car Journey CO₂ Emission Calculator", page_icon="🚗", layout="centered")
+st.set_page_config(page_title="🖕🏾Car Journey CO₂ Emission Calculator", page_icon="🚗", layout="centered")
 
 # ---- HEADER ----
 st.title(" Car Journey CO₂ Emission Calculator")
