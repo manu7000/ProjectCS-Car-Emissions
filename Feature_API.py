@@ -1,6 +1,7 @@
-import openrouteservice
+import openrouteservice as ors
+import folium
 
-client = openrouteservice.Client(key="5b3ce3597851110001cf624863c2387f20a145d69082b4da269112fa") 
+client = ors.Client(key='5b3ce3597851110001cf624863c2387f20a145d69082b4da269112fa') 
 
 def get_coordinates(address):
     """Get coordinates for a given address using Pelias geocoding."""
