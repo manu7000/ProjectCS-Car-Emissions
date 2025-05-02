@@ -1,11 +1,22 @@
-import openrouteservice as ors
-import folium
+import openrouteservice
 
-client = ors.Client(key='5b3ce3597851110001cf624863c2387f20a145d69082b4da269112fa') 
+client = openrouteservice.Client(key='5b3ce3597851110001cf624863c2387f20a145d69082b4da269112fa') 
 
 def get_coordinates(address):
-    response = client.pelias_search(text=address)
-    return response["features"][0]["geometry"]["coordinates"]
+    try:
+        result = client.pelias_search(text=address)
+        coords = result['features'][0]['geometry']['coordinates']
+        return coords
+    except Exception as e:
+        raise RuntimeError(f"Could not geocode address '{address}': {e}")
+    
+def autocomplete_address(partial_text):
+    try:
+        result = client.pelias_autocomplete(text=partial_text)
+        suggestions = [feature['properties']['label'] for feature in result['features']]
+        return suggestions
+    except Exception as e:
+        raise RuntimeError(f"Autocomplete failed: {e}")
 
 def get_route_info(start_coords, end_coords):
     route = client.directions(
