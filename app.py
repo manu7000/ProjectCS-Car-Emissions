@@ -1,7 +1,5 @@
 import streamlit as st
-import openrouteservice
-from openrouteservice import convert
-import os
+from Feature_API import get_coordinates, get_route_info
 
 # ---- PAGE SETUP ----
 st.set_page_config(page_title="🖕🏾Car Journey CO₂ Emission Calculator", page_icon="🚗", layout="centered")
@@ -24,47 +22,27 @@ vehicle_type = st.sidebar.selectbox(
 compare_public_transport = st.sidebar.checkbox("Compare with public transport")
 show_alternatives = st.sidebar.checkbox("Show alternative vehicles")
 
-# ---- OPENROUTESERVICE SETUP ----
-API_KEY = "5b3ce3597851110001cf624863c2387f20a145d69082b4da269112fa" 
-client = openrouteservice.Client(key=API_KEY)
-
 # ---- MAIN SECTION ----
 st.header("Your Journey Summary")
 
 if st.button("Calculate Emissions"):
     if start and end:
         try:
-            # Geocode the addresses
-            geocode_start = client.pelias_search(text=start)["features"][0]["geometry"]["coordinates"]
-            geocode_end = client.pelias_search(text=end)["features"][0]["geometry"]["coordinates"]
-
-            # Get route
-            route = client.directions(
-                coordinates=[geocode_start, geocode_end],
-                profile='driving-car',
-                format='geojson'
-            )
-
-            distance_meters = route['features'][0]['properties']['segments'][0]['distance']
-            duration_seconds = route['features'][0]['properties']['segments'][0]['duration']
-
-            distance_km = distance_meters / 1000
-            duration_minutes = duration_seconds / 60
+            start_coords = get_coordinates(start)
+            end_coords = get_coordinates(end)
+            route_data = get_route_info(start_coords, end_coords)
 
             st.success(f"Route from **{start}** to **{end}** calculated successfully!")
-            st.info(f"Distance: **{distance_km:.2f} km**")
-            st.info(f"Estimated duration: **{duration_minutes:.1f} minutes**")
+            st.info(f"Distance: **{route_data['distance_km']:.2f} km**")
+            st.info(f"Estimated duration: **{route_data['duration_min']:.1f} minutes**")
 
-            # Emissions calculation placeholder
             st.info("CO₂ Emissions: _to be calculated based on vehicle type and distance_")
 
-            # Placeholder for chart
             st.subheader("Comparison Chart")
             st.write("_Chart will appear here after calculation_")
 
         except Exception as e:
-            st.error(f"An error occurred while calculating the route: {e}")
-
+            st.error(str(e))
     else:
         st.error("Please enter both a start and destination address.")
 
