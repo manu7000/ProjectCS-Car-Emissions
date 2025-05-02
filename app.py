@@ -40,3 +40,5 @@ if st.button("Calculate Emissions"):
 # ---- FOOTER ----
 st.markdown("""---""")
 st.caption("Data sources: OpenRouteService, Carbon Interface API, Kaggle CO₂ dataset.")
+
+print("hello")
