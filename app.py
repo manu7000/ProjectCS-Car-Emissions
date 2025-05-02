@@ -25,7 +25,7 @@ compare_public_transport = st.sidebar.checkbox("Compare with public transport")
 show_alternatives = st.sidebar.checkbox("Show alternative vehicles")
 
 # ---- OPENROUTESERVICE SETUP ----
-API_KEY = "5b3ce3597851110001cf624863c2387f20a145d69082b4da269112fa"  # Replace with your actual API key
+API_KEY = "5b3ce3597851110001cf624863c2387f20a145d69082b4da269112fa" 
 client = openrouteservice.Client(key=API_KEY)
 
 # ---- MAIN SECTION ----
