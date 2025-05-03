@@ -193,7 +193,7 @@ if selected_start and selected_end and st.button("Calculate Route"):
         st.pydeck_chart(pdk.Deck(
             layers=[layer],
             initial_view_state=view_state,
-            map_style='mapbox://styles/mapbox/satellite-v9' #adding satellite view because looks cool 
+            map_style= 'mapbox://styles/mapbox/satellite-streets-v11' #adding satellite view because looks really cool 
         ))
 
     except Exception as e:
