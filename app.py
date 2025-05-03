@@ -8,12 +8,36 @@ st.title("Car Journey CO₂ Emission Calculator Updated by Rico")
 st.write("Welcome! This app will help you calculate and compare the carbon emissions of your trips.")
 
 ##### SIDEBAR ####
-st.sidebar.header("Please provide details on your journey")
+#Loading data from the CSV file for sidebar
+df = pd.read_csv("Euro_6_latest.csv", encoding="ISO-8859-1") #I had to encode it bc it didn't read well the file
+df.columns = df.columns.str.strip().str.replace(" ", "_")
 
-vehicle_type = st.sidebar.selectbox(
-    "Select vehicle type", 
-    ["Petrol", "Diesel", "Electric", "Hybrid"]
-)
+# Drop rows with missing key fields
+df = df.dropna(subset=['Manufacturer', 'Fuel_Type', 'Model', 'Description'])
+
+#Drop down menu
+st.sidebar.header("Select Your Vehicle")
+
+#Manufacturer
+manufacturers = sorted(df['Manufacturer'].unique())
+selected_manufacturer = st.sidebar.selectbox("Manufacturer", manufacturers)
+
+#Fuel Type (filtered by brand)
+filtered_df = df[df['Manufacturer'] == selected_manufacturer]
+fuel_types = sorted(filtered_df['Fuel_Type'].unique())
+selected_fuel = st.sidebar.selectbox("Fuel Type", fuel_types)
+
+#Model (filtered by brand + fuel)
+filtered_df = filtered_df[filtered_df['Fuel_Type'] == selected_fuel]
+models = sorted(filtered_df['Model'].unique())
+selected_model = st.sidebar.selectbox("Model", models)
+
+#Description (filtered by brand + fuel + model)
+filtered_df = filtered_df[filtered_df['Model'] == selected_model]
+descriptions = sorted(filtered_df['Description'].unique())
+selected_description = st.sidebar.selectbox("Description", descriptions)
+
+
 compare_public_transport = st.sidebar.checkbox("Compare with public transport")
 show_alternatives = st.sidebar.checkbox("Show alternative vehicles")
 
