@@ -45,7 +45,6 @@ show_alternatives = st.sidebar.checkbox("Show alternative vehicles")
 
 
 
-
 ########### MAIN SECTION ##############
 import streamlit as st
 import pandas as pd
@@ -56,7 +55,7 @@ from Map_API import autocomplete_address, get_coordinates, get_route_info
 
 # ------------------ USER INPUT ------------------
 # ---- START LOCATION ----
-# Ask the user to type a starting address
+#enter a starting address
 start_query = st.text_input("From:")
 
 # Create an empty list to hold suggestions
@@ -184,7 +183,7 @@ if selected_start and selected_end and st.button("Calculate Route"):
             data=df,
             get_source_position=["lon", "lat"],  # Starting points
             get_target_position=["lon_next", "lat_next"],  # Ending points
-            get_color=[0, 0, 255],  # Blue lines
+            get_color=[255, 165, 0],  # orange line
             get_width=5
         )
 
@@ -193,7 +192,8 @@ if selected_start and selected_end and st.button("Calculate Route"):
         # Show the map with the route
         st.pydeck_chart(pdk.Deck(
             layers=[layer],
-            initial_view_state=view_state
+            initial_view_state=view_state,
+            map_style='mapbox://styles/mapbox/satellite-v9' #adding satellite view because looks cool 
         ))
 
     except Exception as e:
