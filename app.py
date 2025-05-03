@@ -183,7 +183,7 @@ if selected_start and selected_end and st.button("Calculate Route"):
             data=df,
             get_source_position=["lon", "lat"],  # Starting points
             get_target_position=["lon_next", "lat_next"],  # Ending points
-            get_color=[255, 165, 0],  # orange line
+            get_color=[0, 0, 255],  # orange line
             get_width=5
         )
 
