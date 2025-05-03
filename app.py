@@ -1,5 +1,5 @@
 import streamlit as st
-
+import panda as pd
 ###### PAGE SETUP ######
 st.set_page_config(page_title="🖕🏾Car Journey CO₂ Emission Calculator", page_icon="🚗", layout="centered")
 
