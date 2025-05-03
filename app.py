@@ -28,7 +28,7 @@ import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 # Import your functions
-from Feature_API import autocomplete_address, get_coordinates, get_route_info
+from Map_API import autocomplete_address, get_coordinates, get_route_info
 
 # ------------------ USER INPUT ------------------
 # ---- START LOCATION ----
