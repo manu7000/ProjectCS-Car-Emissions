@@ -1,13 +1,13 @@
 import streamlit as st
 
-# ---- PAGE SETUP ----
+###### PAGE SETUP ######
 st.set_page_config(page_title="🖕🏾Car Journey CO₂ Emission Calculator", page_icon="🚗", layout="centered")
 
-# ---- HEADER ----
+##### HEADER #####
 st.title("Car Journey CO₂ Emission Calculator Updated by Rico")
 st.write("Welcome! This app will help you calculate and compare the carbon emissions of your trips.")
 
-# ---- SIDEBAR ----
+##### SIDEBAR ####
 st.sidebar.header("Please provide details on your journey")
 
 vehicle_type = st.sidebar.selectbox(
@@ -17,15 +17,15 @@ vehicle_type = st.sidebar.selectbox(
 compare_public_transport = st.sidebar.checkbox("Compare with public transport")
 show_alternatives = st.sidebar.checkbox("Show alternative vehicles")
 
+
+
+
+
+
 ########### MAIN SECTION ##############
 import streamlit as st
 import pandas as pd
 import pydeck as pdk
-
-# Tell Python to search for files in this folder
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 # Import your functions
 from Map_API import autocomplete_address, get_coordinates, get_route_info
