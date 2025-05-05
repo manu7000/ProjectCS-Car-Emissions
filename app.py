@@ -45,100 +45,6 @@ distance_km = st.sidebar.number_input("Trip Distance (km)", min_value=1)
 compare_public_transport = st.sidebar.checkbox("Compare with public transport")
 show_alternatives = st.sidebar.checkbox("Show alternative vehicles")
 
-
-
-########## ROUTE PLANNING SECTION ##########
-
-st.header("Map-Based Route (Optional)")
-
-# Start location
-start_input = st.text_input("From:")
-start_suggestions, selected_start = [], None
-if start_input:
-    try:
-        start_suggestions = autocomplete_address(start_input)
-        selected_start = st.selectbox("Select starting location:", start_suggestions)
-    except Exception as e:
-        st.error(f"Could not get start location suggestions: {e}")
-
-# End location
-end_input = st.text_input("To:")
-end_suggestions, selected_end = [], None
-if end_input:
-    try:
-        end_suggestions = autocomplete_address(end_input)
-        selected_end = st.selectbox("Select destination:", end_suggestions)
-    except Exception as e:
-        st.error(f"Could not get destination suggestions: {e}")
-
-# Calculate route
-if selected_start and selected_end and st.button("Calculate Route"):
-    try:
-        # Step 1: Show selected addresses
-        st.write("📍 From:", selected_start)
-        st.write("📍 To:", selected_end)
-
-        # Step 2: Get coordinates
-        start_coords = get_coordinates(selected_start)
-        end_coords = get_coordinates(selected_end)
-        st.write("🔹 Start coords:", start_coords)
-        st.write("🔹 End coords:", end_coords)
-
-        # Step 3: Get route
-        route = get_route_info(start_coords, end_coords)
-        st.write("🗺️ Route info:", route)
-
-        # --- Check structure ---
-        if not route or "geometry" not in route or not route["geometry"]:
-            st.error("❌ No route data returned. Try other addresses.")
-            st.stop()
-
-        # Step 4: Show route info
-        st.success("✅ Route calculated successfully.")
-        st.info(f"*Distance:* **{route['distance_km']:.2f} km**")
-
-        travel_time_min = route.get('travel_time_min')
-        if travel_time_min is None:
-            st.error("⚠️ No travel time returned.")
-        elif travel_time_min >= 60:
-            h, m = int(travel_time_min // 60), int(travel_time_min % 60)
-            st.info(f"*Travel time:* **{h}h {m} min**")
-        else:
-            st.info(f"*Travel time:* **{travel_time_min:.1f} minutes**")
-
-        # Step 5: Build route DataFrame
-        route_coords = [[lat, lon] for lon, lat in route['geometry']]
-        route_df = pd.DataFrame(route_coords, columns=["lat", "lon"])
-        route_df["lon_next"] = route_df["lon"].shift(-1)
-        route_df["lat_next"] = route_df["lat"].shift(-1)
-        route_df = route_df.dropna()
-
-        # Step 6: Map view
-        center_lat = (route_df["lat"].min() + route_df["lat"].max()) / 2
-        center_lon = (route_df["lon"].min() + route_df["lon"].max()) / 2
-
-        view_state = pdk.ViewState(latitude=center_lat, longitude=center_lon, zoom=7)
-
-        layer = pdk.Layer(
-            "LineLayer",
-            data=route_df,
-            get_source_position=["lon", "lat"],
-            get_target_position=["lon_next", "lat_next"],
-            get_color=[0, 0, 255],
-            get_width=5
-        )
-
-        st.pydeck_chart(pdk.Deck(
-            layers=[layer],
-            initial_view_state=view_state,
-            map_style='mapbox://styles/mapbox/satellite-streets-v11'
-        ))
-
-    except Exception as e:
-        st.error(f"🔥 Error computing route: {e}")
-
-
-
 ##### MAIN DISPLAY #####
 st.header("Estimated Impact")
 
@@ -189,6 +95,141 @@ if not final_row.empty:
 else:
     st.info("No matching vehicle found. Please adjust your selection.")
 
+########## USER INPUT ##########
+# START LOCATION 
+#enter a starting address
+start_input = st.text_input("From:")
+
+# Create an empty list to hold suggestions
+start_suggestions = []
+
+# Create a variable for the selected starting address
+selected_start = None
+
+# If the user types something and presses Enter
+if start_input:
+    try:
+        # Call the autocomplete_address function to get suggestions
+        start_suggestions = autocomplete_address(start_input)
+        # Show the suggestions in a dropdown
+        selected_start = st.selectbox("Select starting location:", start_suggestions)
+
+    except Exception as e:
+        st.error(f"Could not get start location suggestions: {e}")
+
+# END LOCATION 
+# Same coding logic as for the start location 
+end_input = st.text_input("To:")
+end_suggestions = []
+selected_end = None
+if end_input:
+    try:
+        end_suggestions = autocomplete_address(end_input)
+        selected_end = st.selectbox("Select destination:", end_suggestions)
+
+    except Exception as e:
+        st.error(f"Could not get destination suggestions: {e}")
+
+########## CALCULATE ROUTE ##########
+
+#User must have selected both start and end destinations in order to calculate route 
+if selected_start and selected_end and st.button("Calculate Route"):
+    try:
+        ########## GET COORDINATES ##########
+
+        # Get the coordinates (latitude and longitude) of the selected start location
+        start_coords = get_coordinates(selected_start)
+
+        # Get the coordinates of the selected destination
+        end_coords = get_coordinates(selected_end)
+
+        ########## GET ROUTE DATA ##########
+
+        # Call the get_route_info function to get route distance, duration, and geometry
+        route = get_route_info(start_coords, end_coords)
+
+        ########## SHOW ROUTE INFO ##########
+
+        # Show a success message
+        st.success("Your route has been calculated successfully.")
+
+        # Show the distance in kilometers
+        st.info(f"*Distance:* **{route['distance_km']:.2f} km**") # * for itallic and ** for bold text 
+
+        ########## FORMAT TRAVEL TIME ##########
+
+        travel_time_min = route['travel_time_min']
+
+        # If the trip is longer than 60 minutes, show hours and minutes
+        if travel_time_min >= 60:
+            hours = int(travel_time_min // 60)
+            minutes = int(travel_time_min % 60)
+            st.info(f"*Travel time:* **{hours}h {minutes} min**")
+        else:
+            # Otherwise, just show minutes
+            st.info(f"*Travel time:* **{travel_time_min:.1f} minutes**")
+
+
+        ######### MAP DATA ########## ----> I don't understand shit, GPT made it 
+
+        # The API gives coordinates as [longitude, latitude].
+        # For mapping, must reverse them to [latitude, longitude].
+
+        route_coords = [[lat, lon] for lon, lat in route['geometry']]
+
+        # Create a DataFrame with latitude and longitude columns
+        df = pd.DataFrame(route_coords, columns=["lat", "lon"])
+
+        # Create two new columns for the next point in the line (to draw segments)
+        df["lon_next"] = df["lon"].shift(-1)
+        df["lat_next"] = df["lat"].shift(-1)
+
+        # Remove any rows where the next point is missing (last row)
+        df = df.dropna()
+
+        ##### MAP VIEW #####
+
+        # Find the smallest and largest latitude and longitude values
+        min_lat = df["lat"].min()
+        max_lat = df["lat"].max()
+        min_lon = df["lon"].min()
+        max_lon = df["lon"].max()
+
+        # Calculate the center point between the minimum and maximum values
+        center_lat = (min_lat + max_lat) / 2
+        center_lon = (min_lon + max_lon) / 2
+
+        # Set the initial view of the map
+        # Zoom level 7 means fairly zoomed out — adjust if needed
+        view_state = pdk.ViewState(
+            latitude=center_lat,
+            longitude=center_lon,
+            zoom=7
+        )
+
+        #### MAP LAYER #### ---> Also don't understand shit, GPT did 
+
+        # Create a line layer to draw the route
+        layer = pdk.Layer(
+            "LineLayer",
+            data=df,
+            get_source_position=["lon", "lat"],  # Starting points
+            get_target_position=["lon_next", "lat_next"],  # Ending points
+            get_color=[0, 0, 255],  # Orange line
+            get_width=5
+        )
+
+        ###### DISPLAY MAP ####### ----> Made by GPT 
+
+        # Show the map with the route
+        st.pydeck_chart(pdk.Deck(
+            layers=[layer],
+            initial_view_state=view_state,
+            map_style= 'mapbox://styles/mapbox/satellite-streets-v11' # Adding satellite view because looks really cool 
+        ))
+
+    except Exception as e:
+        st.error(f"Error computing route: {e}")
 
 ########## FOOTER ##########
 st.markdown("""---""")
