@@ -16,6 +16,8 @@ df.columns = df.columns.str.strip().str.replace(" ", "_")
 # Drop rows with missing critical fields
 
 df = df.dropna(subset=["Make", "Fuel_Type1", "Model", "Year", "Co2__Tailpipe_For_Fuel_Type1"])
+st.write("📋 Columns in car.csv:", df.columns.tolist())
+
 
 # ---- SIDEBAR: FULL CAR SELECTION ----
 st.sidebar.header("Select Your Vehicle")
