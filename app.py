@@ -1,6 +1,9 @@
 import streamlit as st
 import pandas as pd
 import pydeck as pdk
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.preprocessing import LabelEncoder
+import numpy as np
 
 # Custom API functions
 from Map_API import autocomplete_address, get_coordinates, get_route_info
@@ -46,21 +49,59 @@ except Exception as e:
     st.error(f"Failed to load vehicle data: {e}")
     st.stop()
 
-# --- Car selection ---
-makes = sorted(vehicle_df['Make'].dropna().unique())
-selected_make = st.sidebar.selectbox("Make", makes)
+car_not_listed = st.sidebar.checkbox("My car is not listed")
 
-filtered_df = vehicle_df[vehicle_df['Make'] == selected_make]
-fuel_types = sorted(filtered_df['Fuel_Type1'].dropna().unique())
-selected_fuel = st.sidebar.selectbox("Fuel Type", fuel_types)
+if car_not_listed:
+    st.sidebar.markdown("### Enter your car details")
+    fuel_type = st.sidebar.selectbox("Fuel Type", vehicle_df["Fuel_Type1"].dropna().unique())
+    cylinders = st.sidebar.number_input("Number of Cylinders", min_value=1, step=1)
+    year = st.sidebar.number_input("Year", min_value=1980, max_value=2025, step=1)
 
-filtered_df = filtered_df[filtered_df['Fuel_Type1'] == selected_fuel]
-models = sorted(filtered_df['Model'].dropna().unique())
-selected_model = st.sidebar.selectbox("Model", models)
+    # Train a decision tree model to predict CO2
+    model_data = vehicle_df.dropna(subset=["Fuel_Type1", "Cylinders", "Year", "Co2__Tailpipe_For_Fuel_Type1"]).copy()
+    le = LabelEncoder()
+    model_data["Fuel_Type1_Encoded"] = le.fit_transform(model_data["Fuel_Type1"])
+    X = model_data[["Fuel_Type1_Encoded", "Cylinders", "Year"]]
+    y = model_data["Co2__Tailpipe_For_Fuel_Type1"]
 
-filtered_df = filtered_df[filtered_df['Model'] == selected_model]
-years = sorted(filtered_df['Year'].dropna().unique(), reverse=True)
-selected_year = st.sidebar.selectbox("Year", years)
+    dt_model = DecisionTreeRegressor(random_state=42)
+    dt_model.fit(X, y)
+
+    user_input = pd.DataFrame([[fuel_type, cylinders, year]], columns=["Fuel_Type1", "Cylinders", "Year"])
+    user_input["Fuel_Type1_Encoded"] = le.transform(user_input["Fuel_Type1"])
+    predicted_co2 = dt_model.predict(user_input[["Fuel_Type1_Encoded", "Cylinders", "Year"]])[0]
+
+    st.sidebar.success(f"Predicted CO₂ Tailpipe Emission: {(predicted_co2/1.60934):.2f} g/km")
+
+    selected_make = "Custom"
+    selected_model = "Custom Entry"
+    selected_year = year
+    selected_fuel = fuel_type
+    co2_g_per_mile = predicted_co2
+    final_row = pd.Series({"Co2__Tailpipe_For_Fuel_Type1": predicted_co2})
+else:
+    # --- Car selection ---
+    makes = sorted(vehicle_df['Make'].dropna().unique())
+    selected_make = st.sidebar.selectbox("Make", makes)
+
+    filtered_df = vehicle_df[vehicle_df['Make'] == selected_make]
+    fuel_types = sorted(filtered_df['Fuel_Type1'].dropna().unique())
+    selected_fuel = st.sidebar.selectbox("Fuel Type", fuel_types)
+
+    filtered_df = filtered_df[filtered_df['Fuel_Type1'] == selected_fuel]
+    models = sorted(filtered_df['Model'].dropna().unique())
+    selected_model = st.sidebar.selectbox("Model", models)
+
+    filtered_df = filtered_df[filtered_df['Model'] == selected_model]
+    years = sorted(filtered_df['Year'].dropna().unique(), reverse=True)
+    selected_year = st.sidebar.selectbox("Year", years)
+
+    final_row = vehicle_df[
+        (vehicle_df['Make'] == selected_make) &
+        (vehicle_df['Fuel_Type1'] == selected_fuel) &
+        (vehicle_df['Model'] == selected_model) &
+        (vehicle_df['Year'] == selected_year)
+    ]
 
 compare_public_transport = st.sidebar.checkbox("Compare with public transport")
 show_alternatives = st.sidebar.checkbox("Show alternative vehicles")
