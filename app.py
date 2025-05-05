@@ -119,16 +119,35 @@ if end_input:
     except Exception as e:
         st.error(f"Could not get destination suggestions: {e}")
 
-# Calculate route
+#User must have selected both start and end destinations in order to calculate route 
 if selected_start and selected_end and st.button("Calculate Route"):
     try:
+        ########## GET COORDINATES ##########
+
+        # Get the coordinates (latitude and longitude) of the selected start location
         start_coords = get_coordinates(selected_start)
+
+        # Get the coordinates of the selected destination
         end_coords = get_coordinates(selected_end)
+
+        ########## GET ROUTE DATA ##########
+
+        # Call the get_route_info function to get route distance, duration, and geometry
         route = get_route_info(start_coords, end_coords)
 
-        st.info(f"*Distance:* **{route['distance_km']:.2f} km**")
+        ########## SHOW ROUTE INFO ##########
+
+        # Show a success message
+        st.success("Your route has been calculated successfully.")
+
+        # Show the distance in kilometers
+        st.info(f"*Distance:* **{route['distance_km']:.2f} km**") # * for itallic and ** for bold text 
+
+        ########## FORMAT TRAVEL TIME ##########
 
         travel_time_min = route['travel_time_min']
+
+        # If the trip is longer than 60 minutes, show hours and minutes
         if travel_time_min >= 60:
             hours = int(travel_time_min // 60)
             minutes = int(travel_time_min % 60)
@@ -137,35 +156,68 @@ if selected_start and selected_end and st.button("Calculate Route"):
             # Otherwise, just show minutes
             st.info(f"*Travel time:* **{travel_time_min:.1f} minutes**")
 
-        # Format route geometry for pydeck
+
+        ######### MAP DATA ########## ----> I don't understand shit, GPT made it 
+
+        # The API gives coordinates as [longitude, latitude].
+        # For mapping, must reverse them to [latitude, longitude].
+
         route_coords = [[lat, lon] for lon, lat in route['geometry']]
-        route_df = pd.DataFrame(route_coords, columns=["lat", "lon"])
-        route_df["lon_next"] = route_df["lon"].shift(-1)
-        route_df["lat_next"] = route_df["lat"].shift(-1)
-        route_df = route_df.dropna()
 
-        center_lat = (route_df["lat"].min() + route_df["lat"].max()) / 2
-        center_lon = (route_df["lon"].min() + route_df["lon"].max()) / 2
+        # Create a DataFrame with latitude and longitude columns
+        df_map = pd.DataFrame(route_coords, columns=["lat", "lon"])
 
-        view_state = pdk.ViewState(latitude=center_lat, longitude=center_lon, zoom=7)
+        # Create two new columns for the next point in the line (to draw segments)
+        df_map["lon_next"] = df_map["lon"].shift(-1)
+        df_map["lat_next"] = df_map["lat"].shift(-1)
 
+        # Remove any rows where the next point is missing (last row)
+        df_map = df_map.dropna()
+
+        ##### MAP VIEW #####
+
+        # Find the smallest and largest latitude and longitude values
+        min_lat = df_map["lat"].min()
+        max_lat = df_map["lat"].max()
+        min_lon = df_map["lon"].min()
+        max_lon = df_map["lon"].max()
+
+        # Calculate the center point between the minimum and maximum values
+        center_lat = (min_lat + max_lat) / 2
+        center_lon = (min_lon + max_lon) / 2
+
+        # Set the initial view of the map
+        # Zoom level 7 means fairly zoomed out — adjust if needed
+        view_state = pdk.ViewState(
+            latitude=center_lat,
+            longitude=center_lon,
+            zoom=7
+        )
+
+        #### MAP LAYER #### ---> Also don't understand shit, GPT did 
+
+        # Create a line layer to draw the route
         layer = pdk.Layer(
             "LineLayer",
-            data=route_df,
-            get_source_position=["lon", "lat"],
-            get_target_position=["lon_next", "lat_next"],
-            get_color=[0, 0, 255],
+            data=df_map,
+            get_source_position=["lon", "lat"],  # Starting points
+            get_target_position=["lon_next", "lat_next"],  # Ending points
+            get_color=[0, 0, 255],  # Orange line
             get_width=5
         )
 
+        ###### DISPLAY MAP ####### ----> Made by GPT 
+
+        # Show the map with the route
         st.pydeck_chart(pdk.Deck(
             layers=[layer],
             initial_view_state=view_state,
-            map_style='mapbox://styles/mapbox/satellite-streets-v11'
+            map_style= 'mapbox://styles/mapbox/satellite-streets-v11' # Adding satellite view because looks really cool 
         ))
 
     except Exception as e:
         st.error(f"Error computing route: {e}")
+
 
 ########## FOOTER ##########
 st.markdown("""---""")
