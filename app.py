@@ -126,14 +126,15 @@ if selected_start and selected_end and st.button("Calculate Route"):
         end_coords = get_coordinates(selected_end)
         route = get_route_info(start_coords, end_coords)
 
-        st.success("Your route has been calculated successfully.")
         st.info(f"*Distance:* **{route['distance_km']:.2f} km**")
 
         travel_time_min = route['travel_time_min']
         if travel_time_min >= 60:
-            h, m = int(travel_time_min // 60), int(travel_time_min % 60)
-            st.info(f"*Travel time:* **{h}h {m} min**")
+            hours = int(travel_time_min // 60)
+            minutes = int(travel_time_min % 60)
+            st.info(f"*Travel time:* **{hours}h {minutes} min**")
         else:
+            # Otherwise, just show minutes
             st.info(f"*Travel time:* **{travel_time_min:.1f} minutes**")
 
         # Format route geometry for pydeck
