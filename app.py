@@ -43,6 +43,8 @@ selected_year = st.sidebar.selectbox("Year", years)
 compare_public_transport = st.sidebar.checkbox("Compare with public transport")
 show_alternatives = st.sidebar.checkbox("Show alternative vehicles")
 
+distance_km = 0
+
 
 ########## USER INPUT ##########
 # START LOCATION 
