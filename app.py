@@ -43,33 +43,17 @@ selected_year = st.sidebar.selectbox("Year", years)
 compare_public_transport = st.sidebar.checkbox("Compare with public transport")
 show_alternatives = st.sidebar.checkbox("Show alternative vehicles")
 
-distance_km = 0
-
-
 ########## USER INPUT ##########
-# START LOCATION 
-#enter a starting address
 start_input = st.text_input("From:")
-
-# Create an empty list to hold suggestions
 start_suggestions = []
-
-# Create a variable for the selected starting address
 selected_start = None
-
-# If the user types something and presses Enter
 if start_input:
     try:
-        # Call the autocomplete_address function to get suggestions
         start_suggestions = autocomplete_address(start_input)
-        # Show the suggestions in a dropdown
         selected_start = st.selectbox("Select starting location:", start_suggestions)
-
     except Exception as e:
         st.error(f"Could not get start location suggestions: {e}")
 
-# END LOCATION 
-# Same coding logic as for the start location 
 end_input = st.text_input("To:")
 end_suggestions = []
 selected_end = None
@@ -77,110 +61,55 @@ if end_input:
     try:
         end_suggestions = autocomplete_address(end_input)
         selected_end = st.selectbox("Select destination:", end_suggestions)
-
     except Exception as e:
         st.error(f"Could not get destination suggestions: {e}")
 
 ########## CALCULATE ROUTE ##########
-
-#User must have selected both start and end destinations in order to calculate route 
 if selected_start and selected_end and st.button("Calculate Route"):
     try:
-        ########## GET COORDINATES ##########
-
-        # Get the coordinates (latitude and longitude) of the selected start location
         start_coords = get_coordinates(selected_start)
-
-        # Get the coordinates of the selected destination
         end_coords = get_coordinates(selected_end)
 
-        ########## GET ROUTE DATA ##########
+        route = get_route_info(start_coords, end_coords)
+        distance_km = route['distance_km']
 
- # Call the get_route_info function to get route distance, duration, and geometry
-route = get_route_info(start_coords, end_coords)
-distance_km = route['distance_km']
-
-        ########## SHOW ROUTE INFO ##########
-
-        # Show the distance in kilometers
-        st.info(f"*Distance:* **{route['distance_km']:.2f} km**") # * for itallic and ** for bold text 
-
-        ########## FORMAT TRAVEL TIME ##########
+        st.info(f"*Distance:* **{route['distance_km']:.2f} km**")
 
         travel_time_min = route['travel_time']
-
-        # If the trip is longer than 60 minutes, show hours and minutes
         if travel_time_min >= 60:
             hours = int(travel_time_min // 60)
             minutes = int(travel_time_min % 60)
             st.info(f"*Travel time:* **{hours}h {minutes} min**")
         else:
-            # Otherwise, just show minutes
             st.info(f"*Travel time:* **{travel_time_min:.1f} minutes**")
 
-
-        ######### MAP DATA ########## ----> I don't understand shit, GPT made it 
-
-        # The API gives coordinates as [longitude, latitude].
-        # For mapping, must reverse them to [latitude, longitude].
-
+        # Map
         route_coords = [[lat, lon] for lon, lat in route['geometry']]
-
-        # Create a DataFrame with latitude and longitude columns
         df = pd.DataFrame(route_coords, columns=["lat", "lon"])
-
-        # Create two new columns for the next point in the line (to draw segments)
         df["lon_next"] = df["lon"].shift(-1)
         df["lat_next"] = df["lat"].shift(-1)
-
-        # Remove any rows where the next point is missing (last row)
         df = df.dropna()
 
-        ##### MAP VIEW #####
+        center_lat = (df["lat"].min() + df["lat"].max()) / 2
+        center_lon = (df["lon"].min() + df["lon"].max()) / 2
+        view_state = pdk.ViewState(latitude=center_lat, longitude=center_lon, zoom=7)
 
-        # Find the smallest and largest latitude and longitude values
-        min_lat = df["lat"].min()
-        max_lat = df["lat"].max()
-        min_lon = df["lon"].min()
-        max_lon = df["lon"].max()
-
-        # Calculate the center point between the minimum and maximum values
-        center_lat = (min_lat + max_lat) / 2
-        center_lon = (min_lon + max_lon) / 2
-
-        # Set the initial view of the map
-        # Zoom level 7 means fairly zoomed out — adjust if needed
-        view_state = pdk.ViewState(
-            latitude=center_lat,
-            longitude=center_lon,
-            zoom=7
-        )
-
-        #### MAP LAYER #### ---> Also don't understand shit, GPT did 
-
-        # Create a line layer to draw the route
         layer = pdk.Layer(
             "LineLayer",
             data=df,
-            get_source_position=["lon", "lat"],  # Starting points
-            get_target_position=["lon_next", "lat_next"],  # Ending points
-            get_color=[0, 0, 255],  # Orange line
+            get_source_position=["lon", "lat"],
+            get_target_position=["lon_next", "lat_next"],
+            get_color=[0, 0, 255],
             get_width=5
         )
 
-        ###### DISPLAY MAP ####### ----> Made by GPT 
-
-        # Show the map with the route
         st.pydeck_chart(pdk.Deck(
             layers=[layer],
             initial_view_state=view_state,
-            map_style= 'mapbox://styles/mapbox/satellite-streets-v11' # Adding satellite view because looks really cool 
+            map_style='mapbox://styles/mapbox/satellite-streets-v11'
         ))
 
-    except Exception as e:
-        st.error(f"Error computing route: {e}")
-
-##### MAIN DISPLAY AFTER ROUTE #####
+        ##### MAIN DISPLAY AFTER ROUTE #####
         st.header("Estimated Impact")
 
         final_row = vehicle_df[
