@@ -67,7 +67,7 @@ if end_input:
 ########## CALCULATE ROUTE ##########
 if selected_start and selected_end and st.button("Calculate Route"):
     try:
-       st.write("✅ Le calcul de la route commence")
+        st.write("✅ Le calcul de la route commence")
         start_coords = get_coordinates(selected_start)
         end_coords = get_coordinates(selected_end)
 
