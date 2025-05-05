@@ -67,24 +67,68 @@ if end_input:
 ########## CALCULATE ROUTE ##########
 if selected_start and selected_end and st.button("Calculate Route"):
     try:
-        st.write("✅ Le calcul de la route commence")
+        st.write("✅ Route calculation started...")
         start_coords = get_coordinates(selected_start)
         end_coords = get_coordinates(selected_end)
 
         route = get_route_info(start_coords, end_coords)
         distance_km = route['distance_km']
 
-        st.info(f"*Distance:* **{route['distance_km']:.2f} km**")
+        ###### MAIN DISPLAY (Emissions, Fuel, Time, GHG) ######
+        st.header("Estimated Impact")
 
-        travel_time_min = route['duration_min']
-        if travel_time_min >= 60:
-            hours = int(travel_time_min // 60)
-            minutes = int(travel_time_min % 60)
-            st.info(f"*Travel time:* **{hours}h {minutes} min**")
+        final_row = vehicle_df[
+            (vehicle_df['Make'] == selected_make) &
+            (vehicle_df['Fuel_Type1'] == selected_fuel) &
+            (vehicle_df['Model'] == selected_model) &
+            (vehicle_df['Year'] == selected_year)
+        ]
+
+        if not final_row.empty:
+            row = final_row.iloc[0]
+            co2_g_per_mile = row['Co2__Tailpipe_For_Fuel_Type1']
+            mpg = row.get('Combined_Mpg_For_Fuel_Type1')
+            ghg_score = row.get('GHG_Score')
+
+            st.success(f"{selected_make} {selected_model} ({selected_year}) - {selected_fuel}")
+            st.info(f"📏 Distance: **{distance_km:.2f} km**")
+
+            travel_time_min = route['duration_min']
+            if travel_time_min >= 60:
+                h, m = int(travel_time_min // 60), int(travel_time_min % 60)
+                st.info(f"🕒 Travel time: **{h}h {m} min**")
+            else:
+                st.info(f"🕒 Travel time: **{travel_time_min:.1f} minutes**")
+
+            if pd.notna(co2_g_per_mile) and co2_g_per_mile > 0:
+                co2_g_per_km = co2_g_per_mile / 1.60934
+                total_emissions_grams = co2_g_per_km * distance_km
+                st.metric("💨 CO₂ Emissions", f"{total_emissions_grams / 1000:.2f} kg")
+            else:
+                st.warning("💨 CO₂ emissions could not be calculated.")
+
+            if pd.notna(mpg) and mpg > 0:
+                l_per_100km = 235.21 / mpg
+                fuel_for_trip = (l_per_100km * distance_km) / 100
+                st.metric("⛽ Fuel Consumption", f"{fuel_for_trip:.2f} liters")
+            else:
+                st.warning("⛽ Fuel consumption could not be calculated.")
+
+            if pd.notna(ghg_score) and ghg_score > 0:
+                color = "#2ECC71" if ghg_score >= 8 else "#F39C12" if ghg_score >= 5 else "#E74C3C"
+                st.markdown(
+                    f"<div style='padding: 10px; background-color: {color}; border-radius: 8px; color: white; font-size: 18px;'>"
+                    f"🌿 GHG Score: <strong>{int(ghg_score)}</strong> (out of 10)</div>",
+                    unsafe_allow_html=True
+                )
+            else:
+                st.warning("🌿 GHG score not available.")
         else:
-            st.info(f"*Travel time:* **{travel_time_min:.1f} minutes**")
+            st.info("No matching vehicle found. Please adjust your selection.")
 
-        # Map
+        ########## MAP BELOW ##########
+        st.header("Route Map")
+
         route_coords = [[lat, lon] for lon, lat in route['geometry']]
         df = pd.DataFrame(route_coords, columns=["lat", "lon"])
         df["lon_next"] = df["lon"].shift(-1)
@@ -110,59 +154,9 @@ if selected_start and selected_end and st.button("Calculate Route"):
             map_style='mapbox://styles/mapbox/satellite-streets-v11'
         ))
 
-        ##### MAIN DISPLAY AFTER ROUTE #####
-        st.header("Estimated Impact")
-
-        final_row = vehicle_df[
-            (vehicle_df['Make'] == selected_make) &
-            (vehicle_df['Fuel_Type1'] == selected_fuel) &
-            (vehicle_df['Model'] == selected_model) &
-            (vehicle_df['Year'] == selected_year)
-        ]
-
-        if not final_row.empty:
-            row = final_row.iloc[0]
-            co2_g_per_mile = row['Co2__Tailpipe_For_Fuel_Type1']
-            mpg = row.get('Combined_Mpg_For_Fuel_Type1')
-            ghg_score = row.get('GHG_Score')
-
-            st.success(f"{selected_make} {selected_model} ({selected_year}) - {selected_fuel}")
-
-            if pd.notna(co2_g_per_mile) and co2_g_per_mile > 0:
-                co2_g_per_km = co2_g_per_mile / 1.60934
-                total_emissions_grams = co2_g_per_km * distance_km
-                st.metric("💨 CO₂ Emissions", f"{total_emissions_grams / 1000:.2f} kg")
-            else:
-                st.warning("💨 CO₂ emissions could not be calculated for the selected vehicle.")
-
-            if pd.notna(mpg) and mpg > 0:
-                l_per_100km = 235.21 / mpg
-                fuel_for_trip = (l_per_100km * distance_km) / 100
-                st.metric("⛽ Fuel Consumption", f"{fuel_for_trip:.2f} liters")
-            else:
-                st.warning("⛽ Fuel consumption could not be calculated.")
-
-            if pd.notna(ghg_score) and ghg_score > 0:
-                if ghg_score >= 8:
-                    color = "#2ECC71"
-                elif ghg_score >= 5:
-                    color = "#F39C12"
-                else:
-                    color = "#E74C3C"
-
-                st.markdown(
-                    f"<div style='padding: 10px; background-color: {color}; border-radius: 8px; color: white; font-size: 18px;'>"
-                    f"🌿 GHG Score: <strong>{int(ghg_score)}</strong> (out of 10)</div>",
-                    unsafe_allow_html=True
-                )
-            else:
-                st.warning("🌿 GHG score not available.")
-        else:
-            st.info("No matching vehicle found. Please adjust your selection.")
-
     except Exception as e:
-        st.error("❌ Une erreur s'est produite lors du calcul de la route.")
-        st.exception(e)  # 👉 Montre l'erreur complète dans Streamlit
+        st.error("❌ An error occurred during route calculation.")
+        st.exception(e)
 
 ########## FOOTER ##########
 st.markdown("""---""")
