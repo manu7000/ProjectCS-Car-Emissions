@@ -193,22 +193,22 @@ if selected_start and selected_end and st.button("Calculate Route"):
         route_coords = [[lat, lon] for lon, lat in route['geometry']]
 
         # Create a DataFrame with latitude and longitude columns
-        df = pd.DataFrame(route_coords, columns=["lat", "lon"])
+        df_map = pd.DataFrame(route_coords, columns=["lat", "lon"])
 
         # Create two new columns for the next point in the line (to draw segments)
-        df["lon_next"] = df["lon"].shift(-1)
-        df["lat_next"] = df["lat"].shift(-1)
+        df_map["lon_next"] = df_map["lon"].shift(-1)
+        df_map["lat_next"] = df_map["lat"].shift(-1)
 
         # Remove any rows where the next point is missing (last row)
-        df = df.dropna()
+        df_map = df_map.dropna()
 
         ##### MAP VIEW #####
 
         # Find the smallest and largest latitude and longitude values
-        min_lat = df["lat"].min()
-        max_lat = df["lat"].max()
-        min_lon = df["lon"].min()
-        max_lon = df["lon"].max()
+        min_lat = df_map["lat"].min()
+        max_lat = df_map["lat"].max()
+        min_lon = df_map["lon"].min()
+        max_lon = df_map["lon"].max()
 
         # Calculate the center point between the minimum and maximum values
         center_lat = (min_lat + max_lat) / 2
@@ -227,7 +227,7 @@ if selected_start and selected_end and st.button("Calculate Route"):
         # Create a line layer to draw the route
         layer = pdk.Layer(
             "LineLayer",
-            data=df,
+            data=df_map,
             get_source_position=["lon", "lat"],  # Starting points
             get_target_position=["lon_next", "lat_next"],  # Ending points
             get_color=[0, 0, 255],  # Orange line
