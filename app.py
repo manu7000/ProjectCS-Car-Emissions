@@ -40,8 +40,6 @@ filtered_df = filtered_df[filtered_df['Model'] == selected_model]
 years = sorted(filtered_df['Year'].dropna().unique(), reverse=True)
 selected_year = st.sidebar.selectbox("Year", years)
 
-distance_km = st.sidebar.number_input("Trip Distance (km)", min_value=1)
-
 compare_public_transport = st.sidebar.checkbox("Compare with public transport")
 show_alternatives = st.sidebar.checkbox("Show alternative vehicles")
 
