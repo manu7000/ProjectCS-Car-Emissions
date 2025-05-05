@@ -71,7 +71,7 @@ if car_not_listed:
     user_input["Fuel_Type1_Encoded"] = le.transform(user_input["Fuel_Type1"])
     predicted_co2 = dt_model.predict(user_input[["Fuel_Type1_Encoded", "Cylinders", "Year"]])[0]
 
-    st.sidebar.success(f"Predicted CO₂ Tailpipe Emission: {(predicted_co2/1.60934):.2f} g/km")
+    st.sidebar.success(f"Predicted CO₂ Emission: {(predicted_co2/1.60934):.2f} g/km")
 
     selected_make = "Custom"
     selected_model = "Custom Entry"
