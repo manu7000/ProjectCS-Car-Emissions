@@ -15,7 +15,7 @@ df.columns = df.columns.str.strip().str.replace(" ", "_")
 
 # Drop rows with missing critical fields
 
-df = df.dropna(subset=["Make", "Fuel_Type1", "Model", "Year", "Co2__Tailpipe_For_Fuel_Type1"])
+df = df.dropna(subset=["Make", "Fuel_Type1", "Model", "Year", "Co2_Tailpipe_For_Fuel_Type1"])
 st.write("📋 Columns in car.csv:", df.columns.tolist())
 
 
@@ -58,7 +58,7 @@ final_row = df[
 if not final_row.empty:
     row = final_row.iloc[0]
 
-    co2_g_per_mile = row['Co2__Tailpipe_For_Fuel_Type1']
+    co2_g_per_mile = row['Co2_Tailpipe_For_Fuel_Type1']
     mpg = row.get('Combined_Mpg_For_Fuel_Type1')
     ghg_score = row.get('GHG_Score')
 
