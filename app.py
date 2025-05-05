@@ -2,20 +2,51 @@ import streamlit as st
 import pandas as pd
 import pydeck as pdk
 
-# Import custom map API functions
+# Custom API functions
 from Map_API import autocomplete_address, get_coordinates, get_route_info
 
 ###### PAGE SETUP ######
 st.set_page_config(page_title="CO₂ Emission Calculator", page_icon="🚗", layout="centered")
 
+# Enlarge sidebar width via CSS
+st.markdown("""
+    <style>
+        [data-testid="stSidebar"] {
+            min-width: 400px;
+            max-width: 400px;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
 ##### HEADER #####
 st.title("Car Journey CO₂ Emission Calculator")
 st.write("Welcome! This app will help you calculate and compare the carbon emissions of your trips.")
 
-##### SIDEBAR ####
+##### SIDEBAR #####
+st.sidebar.header("Enter your trip information")
+
+# --- Start/End addresses ---
+start_input = st.sidebar.text_input("From:")
+start_suggestions, selected_start = [], None
+if start_input:
+    try:
+        start_suggestions = autocomplete_address(start_input)
+        selected_start = st.sidebar.selectbox("Select starting location:", start_suggestions)
+    except Exception as e:
+        st.sidebar.error(f"Could not get start location suggestions: {e}")
+
+end_input = st.sidebar.text_input("To:")
+end_suggestions, selected_end = [], None
+if end_input:
+    try:
+        end_suggestions = autocomplete_address(end_input)
+        selected_end = st.sidebar.selectbox("Select destination:", end_suggestions)
+    except Exception as e:
+        st.sidebar.error(f"Could not get destination suggestions: {e}")
+
 st.sidebar.header("Select Your Vehicle")
 
-# Load car data
+# --- Load car data ---
 try:
     vehicle_df = pd.read_csv("all-vehicles-model@public.csv", sep=";", encoding="utf-8-sig", engine="python")
     vehicle_df.columns = vehicle_df.columns.str.strip().str.replace(" ", "_")
@@ -24,7 +55,7 @@ except Exception as e:
     st.error(f"Failed to load vehicle data: {e}")
     st.stop()
 
-# Step-by-step sidebar filters
+# --- Car selection ---
 makes = sorted(vehicle_df['Make'].dropna().unique())
 selected_make = st.sidebar.selectbox("Make", makes)
 
@@ -43,29 +74,8 @@ selected_year = st.sidebar.selectbox("Year", years)
 compare_public_transport = st.sidebar.checkbox("Compare with public transport")
 show_alternatives = st.sidebar.checkbox("Show alternative vehicles")
 
-########## USER INPUT ##########
-start_input = st.text_input("From:")
-start_suggestions = []
-selected_start = None
-if start_input:
-    try:
-        start_suggestions = autocomplete_address(start_input)
-        selected_start = st.selectbox("Select starting location:", start_suggestions)
-    except Exception as e:
-        st.error(f"Could not get start location suggestions: {e}")
-
-end_input = st.text_input("To:")
-end_suggestions = []
-selected_end = None
-if end_input:
-    try:
-        end_suggestions = autocomplete_address(end_input)
-        selected_end = st.selectbox("Select destination:", end_suggestions)
-    except Exception as e:
-        st.error(f"Could not get destination suggestions: {e}")
-
-########## CALCULATE ROUTE ##########
-if selected_start and selected_end and st.button("Calculate Route"):
+########## MAIN LOGIC ##########
+if selected_start and selected_end and st.sidebar.button("Calculate Route"):
     try:
         st.write("✅ Route calculation started...")
         start_coords = get_coordinates(selected_start)
@@ -74,7 +84,6 @@ if selected_start and selected_end and st.button("Calculate Route"):
         route = get_route_info(start_coords, end_coords)
         distance_km = route['distance_km']
 
-        ###### MAIN DISPLAY (Emissions, Fuel, Time, GHG) ######
         st.header("Estimated Impact")
 
         final_row = vehicle_df[
@@ -126,7 +135,7 @@ if selected_start and selected_end and st.button("Calculate Route"):
         else:
             st.info("No matching vehicle found. Please adjust your selection.")
 
-        ########## MAP BELOW ##########
+        ########## MAP DISPLAY ##########
         st.header("Route Map")
 
         route_coords = [[lat, lon] for lon, lat in route['geometry']]
