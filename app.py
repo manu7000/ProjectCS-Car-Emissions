@@ -161,8 +161,8 @@ if selected_start and selected_end and st.button("Calculate Route"):
             st.info("No matching vehicle found. Please adjust your selection.")
 
     except Exception as e:
-    st.error("❌ Une erreur s'est produite lors du calcul de la route.")
-    st.exception(e)  # 👉 Montre l'erreur complète dans Streamlit
+        st.error("❌ Une erreur s'est produite lors du calcul de la route.")
+        st.exception(e)  # 👉 Montre l'erreur complète dans Streamlit
 
 ########## FOOTER ##########
 st.markdown("""---""")
