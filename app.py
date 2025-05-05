@@ -101,9 +101,6 @@ if selected_start and selected_end and st.button("Calculate Route"):
 
         ########## SHOW ROUTE INFO ##########
 
-        # Show a success message
-        st.success("Your route has been calculated successfully.")
-
         # Show the distance in kilometers
         st.info(f"*Distance:* **{route['distance_km']:.2f} km**") # * for itallic and ** for bold text 
 
