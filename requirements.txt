@@ -2,3 +2,5 @@ streamlit
 openrouteservice
 pandas
 pydeck
+scikit-learn
+numpy
