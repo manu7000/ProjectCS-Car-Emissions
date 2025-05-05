@@ -1,10 +1,11 @@
 import streamlit as st
 import pandas as pd
+
 ###### PAGE SETUP ######
-st.set_page_config(page_title="🖕🏾Car Journey CO₂ Emission Calculator", page_icon="🚗", layout="centered")
+st.set_page_config(page_title="CO₂ Emission Calculator", page_icon="🚗", layout="centered")
 
 ##### HEADER #####
-st.title("Car Journey CO₂ Emission Calculator Updated by Rico")
+st.title("Car Journey CO₂ Emission Calculator")
 st.write("Welcome! This app will help you calculate and compare the carbon emissions of your trips.")
 
 ##### SIDEBAR ####
@@ -41,22 +42,17 @@ selected_description = st.sidebar.selectbox("Description", descriptions)
 compare_public_transport = st.sidebar.checkbox("Compare with public transport")
 show_alternatives = st.sidebar.checkbox("Show alternative vehicles")
 
-
-
-
-
 ########### MAIN SECTION ##############
-import streamlit as st
-import pandas as pd
+
 import pydeck as pdk
 
 # Import your functions
 from Map_API import autocomplete_address, get_coordinates, get_route_info
 
-# ------------------ USER INPUT ------------------
-# ---- START LOCATION ----
+########## USER INPUT ##########
+# START LOCATION 
 #enter a starting address
-start_query = st.text_input("From:")
+start_input = st.text_input("From:")
 
 # Create an empty list to hold suggestions
 start_suggestions = []
@@ -65,46 +61,35 @@ start_suggestions = []
 selected_start = None
 
 # If the user types something and presses Enter
-if start_query:
+if start_input:
     try:
         # Call the autocomplete_address function to get suggestions
-        start_suggestions = autocomplete_address(start_query)
-
+        start_suggestions = autocomplete_address(start_input)
         # Show the suggestions in a dropdown
         selected_start = st.selectbox("Select starting location:", start_suggestions)
 
     except Exception as e:
         st.error(f"Could not get start location suggestions: {e}")
 
-# ---- DESTINATION LOCATION ----
-
-# Ask the user to type a destination address
-end_query = st.text_input("To:")
-
-# Create an empty list for destination suggestions
+# END LOCATION 
+# Same coding logic as for the start location 
+end_input = st.text_input("To:")
 end_suggestions = []
-
-# Create a variable for the selected destination address
 selected_end = None
-
-# If the user types something and presses Enter
-if end_query:
+if end_input:
     try:
-        # Call the autocomplete_address function to get suggestions
-        end_suggestions = autocomplete_address(end_query)
-
-        # Show the suggestions in a dropdown
+        end_suggestions = autocomplete_address(end_input)
         selected_end = st.selectbox("Select destination:", end_suggestions)
 
     except Exception as e:
         st.error(f"Could not get destination suggestions: {e}")
 
-# ------------------ CALCULATE ROUTE ------------------
+########## CALCULATE ROUTE ##########
 
-# If both a start and end location have been selected and the user clicks the button
+#User must have selected both start and end destinations in order to calculate route 
 if selected_start and selected_end and st.button("Calculate Route"):
     try:
-        # --- GET COORDINATES ---
+        ########## GET COORDINATES ##########
 
         # Get the coordinates (latitude and longitude) of the selected start location
         start_coords = get_coordinates(selected_start)
@@ -112,36 +97,37 @@ if selected_start and selected_end and st.button("Calculate Route"):
         # Get the coordinates of the selected destination
         end_coords = get_coordinates(selected_end)
 
-        # --- GET ROUTE DATA ---
+        ########## GET ROUTE DATA ##########
 
         # Call the get_route_info function to get route distance, duration, and geometry
         route = get_route_info(start_coords, end_coords)
 
-        # --- SHOW ROUTE INFO ---
+        ########## SHOW ROUTE INFO ##########
 
         # Show a success message
         st.success("Your route has been calculated successfully.")
 
         # Show the distance in kilometers
-        st.info(f"Distance: **{route['distance_km']:.2f} km**")
+        st.info(f"*Distance:* **{route['distance_km']:.2f} km**") # * for itallic and ** for bold text 
 
-        # --- FORMAT TRAVEL TIME ---
+        ########## FORMAT TRAVEL TIME ##########
 
-        duration_min = route['duration_min']
+        travel_time_min = route['travel_time_min']
 
         # If the trip is longer than 60 minutes, show hours and minutes
-        if duration_min >= 60:
-            hours = int(duration_min // 60)
-            minutes = int(duration_min % 60)
-            st.info(f"Travel time: **{hours}h {minutes} min**")
+        if travel_time_min >= 60:
+            hours = int(travel_time_min // 60)
+            minutes = int(travel_time_min % 60)
+            st.info(f"*Travel time:* **{hours}h {minutes} min**")
         else:
             # Otherwise, just show minutes
-            st.info(f"Travel time: **{duration_min:.1f} minutes**")
+            st.info(f"*Travel time:* **{travel_time_min:.1f} minutes**")
 
-        # ------------------ PREPARE MAP DATA ------------------
+
+        ######### MAP DATA ########## ----> I don't understand shit, GPT made it 
 
         # The API gives coordinates as [longitude, latitude].
-        # For mapping, we reverse them to [latitude, longitude].
+        # For mapping, must reverse them to [latitude, longitude].
 
         route_coords = [[lat, lon] for lon, lat in route['geometry']]
 
@@ -155,7 +141,7 @@ if selected_start and selected_end and st.button("Calculate Route"):
         # Remove any rows where the next point is missing (last row)
         df = df.dropna()
 
-        # ------------------ MAP VIEW ------------------
+        ##### MAP VIEW #####
 
         # Find the smallest and largest latitude and longitude values
         min_lat = df["lat"].min()
@@ -175,7 +161,7 @@ if selected_start and selected_end and st.button("Calculate Route"):
             zoom=7
         )
 
-        # ------------------ MAP LAYER ------------------
+        #### MAP LAYER #### ---> Also don't understand shit, GPT did 
 
         # Create a line layer to draw the route
         layer = pdk.Layer(
@@ -183,17 +169,17 @@ if selected_start and selected_end and st.button("Calculate Route"):
             data=df,
             get_source_position=["lon", "lat"],  # Starting points
             get_target_position=["lon_next", "lat_next"],  # Ending points
-            get_color=[0, 0, 255],  # orange line
+            get_color=[0, 0, 255],  # Orange line
             get_width=5
         )
 
-        # ------------------ DISPLAY MAP ------------------
+        ###### DISPLAY MAP ####### ----> Made by GPT 
 
         # Show the map with the route
         st.pydeck_chart(pdk.Deck(
             layers=[layer],
             initial_view_state=view_state,
-            map_style= 'mapbox://styles/mapbox/satellite-streets-v11' #adding satellite view because looks really cool 
+            map_style= 'mapbox://styles/mapbox/satellite-streets-v11' # Adding satellite view because looks really cool 
         ))
 
     except Exception as e:
@@ -201,4 +187,5 @@ if selected_start and selected_end and st.button("Calculate Route"):
 
 ########## FOOTER #########
 st.markdown("""---""")
-st.caption("Data sources: OpenRouteService, Carbon Interface API, Kaggle CO₂ dataset.")
+st.caption("CS Project. Designed by Aymeric, Kaïs, Manu adn Yannick. Group 2.06" \
+           "Data sources: OpenRouteService, Carbon Interface API,.")
