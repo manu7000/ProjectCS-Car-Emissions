@@ -74,27 +74,46 @@ if end_input:
 # Calculate route
 if selected_start and selected_end and st.button("Calculate Route"):
     try:
+        # Step 1: Show selected addresses
+        st.write("📍 From:", selected_start)
+        st.write("📍 To:", selected_end)
+
+        # Step 2: Get coordinates
         start_coords = get_coordinates(selected_start)
         end_coords = get_coordinates(selected_end)
-        route = get_route_info(start_coords, end_coords)
+        st.write("🔹 Start coords:", start_coords)
+        st.write("🔹 End coords:", end_coords)
 
-        st.success("Your route has been calculated successfully.")
+        # Step 3: Get route
+        route = get_route_info(start_coords, end_coords)
+        st.write("🗺️ Route info:", route)
+
+        # --- Check structure ---
+        if not route or "geometry" not in route or not route["geometry"]:
+            st.error("❌ No route data returned. Try other addresses.")
+            st.stop()
+
+        # Step 4: Show route info
+        st.success("✅ Route calculated successfully.")
         st.info(f"*Distance:* **{route['distance_km']:.2f} km**")
 
-        travel_time_min = route['travel_time_min']
-        if travel_time_min >= 60:
+        travel_time_min = route.get('travel_time_min')
+        if travel_time_min is None:
+            st.error("⚠️ No travel time returned.")
+        elif travel_time_min >= 60:
             h, m = int(travel_time_min // 60), int(travel_time_min % 60)
             st.info(f"*Travel time:* **{h}h {m} min**")
         else:
             st.info(f"*Travel time:* **{travel_time_min:.1f} minutes**")
 
-        # Format route geometry for pydeck
+        # Step 5: Build route DataFrame
         route_coords = [[lat, lon] for lon, lat in route['geometry']]
         route_df = pd.DataFrame(route_coords, columns=["lat", "lon"])
         route_df["lon_next"] = route_df["lon"].shift(-1)
         route_df["lat_next"] = route_df["lat"].shift(-1)
         route_df = route_df.dropna()
 
+        # Step 6: Map view
         center_lat = (route_df["lat"].min() + route_df["lat"].max()) / 2
         center_lon = (route_df["lon"].min() + route_df["lon"].max()) / 2
 
@@ -115,10 +134,9 @@ if selected_start and selected_end and st.button("Calculate Route"):
             map_style='mapbox://styles/mapbox/satellite-streets-v11'
         ))
 
-        distance_km = route['distance_km']
-
     except Exception as e:
-        st.error(f"Error computing route: {e}")
+        st.error(f"🔥 Error computing route: {e}")
+
 
 
 ##### MAIN DISPLAY #####
