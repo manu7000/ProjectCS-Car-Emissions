@@ -98,7 +98,7 @@ if selected_start and selected_end and st.button("Calculate Route"):
 
         # Call the get_route_info function to get route distance, duration, and geometry
         route = get_route_info(start_coords, end_coords)
-distance_km = route['distance_km']
+        distance_km = route['distance_km']
 
         ########## SHOW ROUTE INFO ##########
 
