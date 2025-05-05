@@ -98,6 +98,7 @@ if selected_start and selected_end and st.button("Calculate Route"):
 
         # Call the get_route_info function to get route distance, duration, and geometry
         route = get_route_info(start_coords, end_coords)
+distance_km = route['distance_km']
 
         ########## SHOW ROUTE INFO ##########
 
@@ -182,7 +183,6 @@ if selected_start and selected_end and st.button("Calculate Route"):
 ##### MAIN DISPLAY #####
 st.header("Estimated Impact")
 
-distance_km = route['distance_km']
 final_row = vehicle_df[
     (vehicle_df['Make'] == selected_make) &
     (vehicle_df['Fuel_Type1'] == selected_fuel) &
