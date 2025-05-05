@@ -129,8 +129,8 @@ if selected_start and selected_end and st.sidebar.button("Calculate Route"):
             row = final_row.iloc[0] if not car_not_listed else final_row
             
             co2_g_per_mile = row['Co2__Tailpipe_For_Fuel_Type1']
-            mpg = row.get('Combined_Mpg_For_Fuel_Type1')
-            ghg_score = row.get('GHG_Score')
+            mpg = row.get('Combined_Mpg_For_Fuel_Type1', np.nan)
+            ghg_score = row.get('GHG_Score', np.nan)
 
             st.success(f"{selected_make} {selected_model} ({selected_year}) - {selected_fuel}")
             st.info(f"📏 Distance: **{distance_km:.2f} km**")
