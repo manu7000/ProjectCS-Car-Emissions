@@ -8,15 +8,6 @@ from Map_API import autocomplete_address, get_coordinates, get_route_info
 ###### PAGE SETUP ######
 st.set_page_config(page_title="CO₂ Emission Calculator", page_icon="🚗", layout="centered")
 
-# Enlarge sidebar width via CSS
-st.markdown("""
-    <style>
-        [data-testid="stSidebar"] {
-            min-width: 400px;
-            max-width: 400px;
-        }
-    </style>
-""", unsafe_allow_html=True)
 
 ##### HEADER #####
 st.title("Car Journey CO₂ Emission Calculator")
