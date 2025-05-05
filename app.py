@@ -12,12 +12,10 @@ st.write("Welcome! This app will help you calculate and compare the carbon emiss
 #Loading data from the CSV file for sidebar
 df = pd.read_csv("car.csv", sep=";", encoding="ISO-8859-1", engine="python")
 df.columns = df.columns.str.strip().str.replace(" ", "_")
-st.write("🧠 Colonnes détectées :", df.columns.tolist())
 
 # Drop rows with missing critical fields
 
 df = df.dropna(subset=["Make", "Fuel_Type1", "Model", "Year", "Co2_Tailpipe_For_Fuel_Type1"])
-st.write("📋 Columns in car.csv:", df.columns.tolist())
 
 
 # ---- SIDEBAR: FULL CAR SELECTION ----
