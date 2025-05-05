@@ -10,7 +10,7 @@ st.write("Welcome! This app will help you calculate and compare the carbon emiss
 
 ##### SIDEBAR ####
 #Loading data from the CSV file for sidebar
-df = pd.read_csv("all-vehicles-model@public.csv", sep=";", encoding="ISO-8859-1", engine="python")
+df = pd.read_csv("car.csv", sep=";", encoding="ISO-8859-1", engine="python")
 df.columns = df.columns.str.strip().str.replace(" ", "_")
 
 # Drop rows with missing critical fields
