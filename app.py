@@ -71,7 +71,7 @@ if car_not_listed:
     user_input["Fuel_Type1_Encoded"] = le.transform(user_input["Fuel_Type1"])
     predicted_co2 = dt_model.predict(user_input[["Fuel_Type1_Encoded", "Cylinders", "Year"]])[0]
 
-    st.sidebar.success(f"Predicted CO₂ Emission: {(predicted_co2/1.60934):.2f} g/km")
+    st.sidebar.success(f"Predicted CO₂ Tailpipe Emission: {(predicted_co2/1.60934):.2f} g/km")
 
     selected_make = "Custom"
     selected_model = "Custom Entry"
@@ -117,13 +117,6 @@ if selected_start and selected_end and st.sidebar.button("Calculate Route"):
         distance_km = route['distance_km']
 
         st.header("Estimated Impact")
-
-        final_row = vehicle_df[
-            (vehicle_df['Make'] == selected_make) &
-            (vehicle_df['Fuel_Type1'] == selected_fuel) &
-            (vehicle_df['Model'] == selected_model) &
-            (vehicle_df['Year'] == selected_year)
-        ]
 
         if not final_row.empty:
             row = final_row.iloc[0] if not car_not_listed else final_row
