@@ -68,10 +68,10 @@ selected_start = None
 if start_query:
     try:
         # Call the autocomplete_address function to get suggestions
-        start_suggestions = autocomplete_address(start_query)
+        start_query = autocomplete_address(start_query)
 
         # Show the suggestions in a dropdown
-        selected_start = st.selectbox("Select starting location:", start_suggestions)
+        selected_start = st.selectbox("Select starting location:", start_query)
 
     except Exception as e:
         st.error(f"Could not get start location suggestions: {e}")
