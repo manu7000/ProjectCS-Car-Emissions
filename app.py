@@ -107,7 +107,7 @@ if selected_start and selected_end and st.button("Calculate Route"):
 
         ########## FORMAT TRAVEL TIME ##########
 
-        travel_time_min = route['travel_time_min']
+        travel_time_min = route['travel_time']
 
         # If the trip is longer than 60 minutes, show hours and minutes
         if travel_time_min >= 60:
