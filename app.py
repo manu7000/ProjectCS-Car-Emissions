@@ -17,7 +17,7 @@ st.sidebar.header("Select Your Vehicle")
 
 # Load car data
 try:
-    vehicle_df = pd.read_csv("all-vehicles-model@public.csv", sep=";", encoding="ISO-8859-1", engine="python")
+    vehicle_df = pd.read_csv("all-vehicles-model@public.csv", sep=";", encoding="utf-8-sig", engine="python")
     vehicle_df.columns = vehicle_df.columns.str.strip().str.replace(" ", "_")
     vehicle_df = vehicle_df.dropna(subset=["Make", "Fuel_Type1", "Model", "Year", "Co2__Tailpipe_For_Fuel_Type1"])
 except Exception as e:
