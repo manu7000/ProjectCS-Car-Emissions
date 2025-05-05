@@ -76,7 +76,7 @@ if selected_start and selected_end and st.button("Calculate Route"):
 
         st.info(f"*Distance:* **{route['distance_km']:.2f} km**")
 
-        travel_time_min = route['travel_time']
+        travel_time_min = route['duration_min']
         if travel_time_min >= 60:
             hours = int(travel_time_min // 60)
             minutes = int(travel_time_min % 60)
