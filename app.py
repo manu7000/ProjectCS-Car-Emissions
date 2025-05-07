@@ -150,8 +150,8 @@ if selected_start and selected_end and st.sidebar.button("Calculate Route"):
                     train_emission_kg = (train_co2_g_per_km * distance_km) / 1000
                     bus_emission_kg = (bus_co2_g_per_km * distance_km) / 1000
 
-                    st.metric("🚄 Train Emissions", f"{train_emission_kg:.2f} kg CO₂")
-                    st.metric("🚌 Bus Emissions", f"{bus_emission_kg:.2f} kg CO₂")
+                    st.metric("🚄 Train Emissions", f"{train_emission_kg:.2f} kg")
+                    st.metric("🚌 Bus Emissions", f"{bus_emission_kg:.2f} kg")
 
                     if total_emissions_grams > 0:
                         car_emission_kg = total_emissions_grams / 1000
