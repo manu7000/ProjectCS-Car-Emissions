@@ -180,7 +180,7 @@ if selected_start and selected_end and st.sidebar.button("Calculate Route"):
             get_source_position=["lon", "lat"],
             get_target_position=["lon_next", "lat_next"],
             get_color=[0, 0, 255], # = blue color for route line 
-            get_width=10
+            get_width=4
         )
 
         st.pydeck_chart(pdk.Deck(
