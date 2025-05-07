@@ -129,20 +129,20 @@ if selected_start and selected_end and st.sidebar.button("Calculate Route"):
         total_emissions_grams = co2_g_per_km * distance_km
 
         st.success(f"{selected_make} {selected_model} ({selected_year}) - {selected_fuel}")
-        st.info(f"\ud83d\udccf Distance: **{distance_km:.2f} km**")
+        st.info(f"📏 Distance: **{distance_km:.2f} km**")
 
         travel_time_min = route['duration_min']
-        st.info(f"\ud83d\udd52 Travel time: **{travel_time_min // 60:.0f}h {travel_time_min % 60:.0f} min**")
+        st.info(f"🕒 Travel time: **{travel_time_min // 60:.0f}h {travel_time_min % 60:.0f} min**")
 
-        st.metric("\ud83d\udca8 CO₂ Emissions", f"{total_emissions_grams / 1000:.2f} kg")
+        st.metric("💨 CO₂ Emissions", f"{total_emissions_grams / 1000:.2f} kg")
 
         if compare_public_transport:
-            st.subheader("\ud83d\ude86 Public Transport CO₂ Comparison")
+            st.subheader("🚆 Public Transport CO₂ Comparison")
             train_kg = 41 * distance_km / 1000
             bus_kg = 105 * distance_km / 1000
             car_kg = total_emissions_grams / 1000
-            st.metric("\ud83d\ude84 Train Emissions", f"{train_kg:.2f} kg")
-            st.metric("\ud83d\ude8c Bus Emissions", f"{bus_kg:.2f} kg")
+            st.metric("🚄 Train Emissions", f"{train_kg:.2f} kg")
+            st.metric("🚌 Bus Emissions", f"{bus_kg:.2f} kg")
             if car_kg > train_kg:
                 st.success(f"Train saves ~{car_kg - train_kg:.2f} kg CO₂")
             if car_kg > bus_kg:
@@ -151,14 +151,14 @@ if selected_start and selected_end and st.sidebar.button("Calculate Route"):
         mpg = row.get('Combined_Mpg_For_Fuel_Type1', np.nan)
         if pd.notna(mpg) and mpg > 0:
             fuel_used = (235.21 / mpg) * distance_km / 100
-            st.metric("\u26fd Fuel Consumption", f"{fuel_used:.2f} liters")
+            st.metric("⛽ Fuel Consumption", f"{fuel_used:.2f} liters")
 
         ghg_score = row.get('GHG_Score', np.nan)
         if pd.notna(ghg_score):
             color = "#2ECC71" if ghg_score >= 8 else "#F39C12" if ghg_score >= 5 else "#E74C3C"
             st.markdown(f"""
                 <div style='padding: 10px; background-color: {color}; border-radius: 8px; color: white;'>
-                \ud83c\udf3f GHG Score: <strong>{int(ghg_score)}</strong> (out of 10)</div>
+                🌿 GHG Score: <strong>{int(ghg_score)}</strong> (out of 10)</div>
             """, unsafe_allow_html=True)
 
         st.header("Route Map")
