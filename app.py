@@ -13,12 +13,14 @@ st.set_page_config(page_title="CO₂ Emission Calculator", page_icon="🚗", lay
 # Utility Functions
 # -----------------------------------
 
+# Function to select a vehicle
 @st.cache_data
 def load_vehicle_data(path: str) -> pd.DataFrame:
     df = pd.read_csv(path, sep=";", encoding="utf-8-sig", engine="python")
     df.columns = df.columns.str.strip().str.replace(" ", "_")
     return df.dropna(subset=["Make", "Fuel_Type1", "Model", "Year", "Co2__Tailpipe_For_Fuel_Type1"])
 
+# Function to train the ML model
 @st.cache_resource
 def train_model(df):
     df = df.dropna(subset=["Fuel_Type1", "Cylinders", "Year", "Co2__Tailpipe_For_Fuel_Type1"]).copy()
@@ -30,11 +32,13 @@ def train_model(df):
     model.fit(X, y)
     return model, le
 
+# Function to predict the Co2 emissions based on user input
 def predict_co2_emission(model, le, fuel_type, cylinders, year):
     user_input = pd.DataFrame([[fuel_type, cylinders, year]], columns=["Fuel_Type1", "Cylinders", "Year"])
     user_input["Fuel_Type1_Encoded"] = le.transform(user_input["Fuel_Type1"])
     return model.predict(user_input[["Fuel_Type1_Encoded", "Cylinders", "Year"]])[0]
 
+# Function to display the map
 def display_route_map(route):
     route_coords = [[lat, lon] for lon, lat in route['geometry']]
     df = pd.DataFrame(route_coords, columns=["lat", "lon"])
