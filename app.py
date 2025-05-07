@@ -225,5 +225,6 @@ if selected_start and selected_end and st.sidebar.button("Calculate Route"):
 
 ########## FOOTER ##########
 st.markdown("""---""")
-st.caption("CS Project. Designed by Aymeric, Kaïs, Manu and Yannick. Group 2.06. "
-           "Data sources: OpenRouteService, European Environment Agency, Environmental Protection Agency's National Vehicle and Fuel Emissions Laboratory.")
+st.caption("CS Project. Designed by Aymeric, Kaïs, Emmanuel and Yannick. Group 2.06. "
+           "Data sources: OpenRouteService, European Environment Agency, " \
+           "Environmental Protection Agency's National Vehicle and Fuel Emissions Laboratory.")
