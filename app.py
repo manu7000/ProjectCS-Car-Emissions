@@ -76,9 +76,9 @@ st.sidebar.header("Enter your trip information")
 
 # Address inputs
 start_input = st.sidebar.text_input("From:")
-end_input = st.sidebar.text_input("To:")
-
 selected_start = st.sidebar.selectbox("Select starting location:", autocomplete_address(start_input)) if start_input else None
+
+end_input = st.sidebar.text_input("To:")
 selected_end = st.sidebar.selectbox("Select destination:", autocomplete_address(end_input)) if end_input else None
 
 # Load vehicle data
