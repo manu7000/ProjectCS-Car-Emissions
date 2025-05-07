@@ -54,7 +54,7 @@ car_not_listed = st.sidebar.checkbox("My car is not listed")
 if car_not_listed:
     st.sidebar.markdown("### Enter your car details")
     fuel_type = st.sidebar.selectbox("Fuel Type", vehicle_df["Fuel_Type1"].dropna().unique())
-    cylinders = st.sidebar.number_input("Number of Cylinders", min_value=1, step=1)
+    cylinders = st.sidebar.number_input("Number of Cylinders", min_value=3, max_value=16, step=1)
     year = st.sidebar.number_input("Year", min_value=1980, max_value=2025, step=1)
 
     # Train a decision tree model to predict CO2
