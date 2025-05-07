@@ -4,3 +4,4 @@ pandas
 pydeck
 scikit-learn
 numpy
+plotly.graph_objects
