@@ -10,7 +10,7 @@ from Map_API import autocomplete_address, get_coordinates, get_route_info
 st.set_page_config(page_title="CO₂ Emission Calculator", page_icon="🚗", layout="centered")
 
 # -----------------------------------
-# Utility Functions
+# Utility Functions YANNICK
 # -----------------------------------
 
 # Function to load the dataset
@@ -49,6 +49,8 @@ def display_route_map(route):
     center_lat = (df["lat"].min() + df["lat"].max()) / 2
     center_lon = (df["lon"].min() + df["lon"].max()) / 2
     view_state = pdk.ViewState(latitude=center_lat, longitude=center_lon, zoom=7)
+
+#---------------- AYMERIC ----------------------------------------------------------------------------------------
 
     layer = pdk.Layer(
         "LineLayer",
@@ -89,6 +91,8 @@ except Exception:
     st.stop()
 
 model, le = train_model(vehicle_df)
+
+#---------------- KAIS -----------------------------------------------------------------------
 
 st.sidebar.header("Select Your Vehicle")
 car_not_listed = st.sidebar.checkbox("My car is not listed")
@@ -131,6 +135,8 @@ if selected_start and selected_end and st.sidebar.button("Calculate Route"):
         co2_g_per_mile = row['Co2__Tailpipe_For_Fuel_Type1']
         co2_g_per_km = co2_g_per_mile / 1.60934
         total_emissions_grams = co2_g_per_km * distance_km
+
+#---------------- MANU-------------------------------------------------------------------------
 
         st.success(f"{selected_make} {selected_model} ({selected_year}) - {selected_fuel}")
         st.info(f"📏 Distance: **{distance_km:.2f} km**")
