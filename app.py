@@ -179,14 +179,14 @@ if selected_start and selected_end and st.sidebar.button("Calculate Route"):
             data=df,
             get_source_position=["lon", "lat"],
             get_target_position=["lon_next", "lat_next"],
-            get_color=[0, 0, 255],
-            get_width=5
+            get_color=[0, 0, 255], # = blue color for route line 
+            get_width=10
         )
 
         st.pydeck_chart(pdk.Deck(
             layers=[layer],
             initial_view_state=view_state,
-            map_style='mapbox://styles/mapbox/satellite-streets-v11'
+            map_style='mapbox://styles/mapbox/satellite-streets-v11' #link from ChatGPT to get sat view + cities & routes 
         ))
 
     except Exception as e:
