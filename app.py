@@ -7,7 +7,7 @@ import numpy as np
 from Map_API import autocomplete_address, get_coordinates, get_route_info
 
 # Set page configuration
-st.set_page_config(page_title="CO₂ Emission Calculator", page_icon="\ud83d\ude97", layout="centered")
+st.set_page_config(page_title="CO₂ Emission Calculator", page_icon="🚗", layout="centered")
 
 # -----------------------------------
 # Utility Functions
