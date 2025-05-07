@@ -108,7 +108,6 @@ compare_public_transport = st.sidebar.checkbox("Compare with public transport")
 ########## MAIN LOGIC ##########
 if selected_start and selected_end and st.sidebar.button("Calculate Route"):
     try:
-        st.write("✅ Route calculation started...")
         start_coords = get_coordinates(selected_start)
         end_coords = get_coordinates(selected_end)
 
