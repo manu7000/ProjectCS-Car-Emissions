@@ -13,7 +13,7 @@ st.set_page_config(page_title="CO₂ Emission Calculator", page_icon="🚗", lay
 # Utility Functions
 # -----------------------------------
 
-# Function to select a vehicle
+# Function to load the dataset
 @st.cache_data
 def load_vehicle_data(path: str) -> pd.DataFrame:
     df = pd.read_csv(path, sep=";", encoding="utf-8-sig", engine="python")
