@@ -104,7 +104,6 @@ else:
     ]
 
 compare_public_transport = st.sidebar.checkbox("Compare with public transport")
-show_alternatives = st.sidebar.checkbox("Show alternative vehicles")
 
 ########## MAIN LOGIC ##########
 if selected_start and selected_end and st.sidebar.button("Calculate Route"):
