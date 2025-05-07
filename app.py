@@ -158,12 +158,12 @@ if selected_start and selected_end and st.sidebar.button("Calculate Route"):
                         bus_savings = car_emission_kg - bus_emission_kg
 
                         if train_savings > 0:
-                            st.success(f"🌿 By taking the **train**, you could save ~{train_savings:.2f} kg CO₂ (-{(train_savings/car_emission_kg * 100):.2f}%).")
+                            st.success(f" By taking the **train**, you could save ~{train_savings:.2f} kg CO₂ (-{(train_savings/car_emission_kg * 100):.2f}%).")
                         else:
                             st.info("🚗 Your car is more efficient than the average train on this route.")
 
                         if bus_savings > 0:
-                            st.success(f"🌿 By taking the **bus**, you could save ~{bus_savings:.2f} kg CO₂ (-{(bus_savings/car_emission_kg * 100):.2f}%).")
+                            st.success(f" By taking the **bus**, you could save ~{bus_savings:.2f} kg CO₂ (-{(bus_emission_kg/car_emission_kg * 100):.2f}%).")
                         else:
                             st.info("🚗 Your car is more efficient than the average bus on this route.")
 
@@ -180,7 +180,7 @@ if selected_start and selected_end and st.sidebar.button("Calculate Route"):
             if pd.notna(ghg_score) and ghg_score > 0:
                 color = "#2ECC71" if ghg_score >= 8 else "#F39C12" if ghg_score >= 5 else "#E74C3C"
                 st.markdown(
-                    f"<div style='padding: 10px; background-color: {color}; border-radius: 8px; color: white; font-size: 18px;'>"
+                    f"<div style='padding: 10px; background-color: {color}; border-radius: 8px; color: white; font-size: 40px;'>"
                     f"🌿 GHG Score: <strong>{int(ghg_score)}</strong> (out of 10)</div>",
                     unsafe_allow_html=True
                 )
