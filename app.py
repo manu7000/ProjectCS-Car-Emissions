@@ -163,7 +163,7 @@ if selected_start and selected_end and st.sidebar.button("Calculate Route"):
                             st.info("🚗 Your car is more efficient than the average train on this route.")
 
                         if bus_savings > 0:
-                            st.success(f"🌿 By taking the **bus**, you could save ~{bus_savings:.2f} kg CO₂.")
+                            st.success(f"🌿 By taking the **bus**, you could save ~{bus_savings:.2f} kg CO₂ (-{(bus_emission_kg/car_emission_kg * 100):.2f}%).")
                         else:
                             st.info("🚗 Your car is more efficient than the average bus on this route.")
 
