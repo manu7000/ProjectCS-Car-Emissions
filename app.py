@@ -143,7 +143,7 @@ if car_not_listed:
     year = st.sidebar.number_input("Year", min_value=1980, max_value=2025, step=1)  # year input
     predicted_co2 = predict_co2_emission(model, le, fuel_type, cylinders, year)  # predict CO2 via ML
     st.sidebar.success(f"Predicted CO₂ Emission: {(predicted_co2/1.60934):.2f} g/km")  # show CO2 prediction on the screen (divided by 1.6 because it's in mile in the csv file)
-    final_row = pd.Series({"Co2__Tailpipe_For_Fuel_Type1": predicted_co2})  # single‐row fallback for the code to work whether the data is from CSV or predicted by ML
+    final_row = pd.Series({"Co2__Tailpipe_For_Fuel_Type1": predicted_co2})  # single‐row fallback for the code to work with ML prediction otherwise it will go check for final row on line 159
     selected_make, selected_model, selected_year, selected_fuel = "Custom", "Custom Entry", year, fuel_type  # gives placeholder values for make and model so that the code can treat it as normal selection
 else:
     selected_make = st.sidebar.selectbox("Brand", sorted(vehicle_df["Make"].unique()))  # choose brand text on the sidebar
