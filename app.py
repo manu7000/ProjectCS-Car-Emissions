@@ -215,7 +215,7 @@ if selected_start and selected_end and st.sidebar.button("Calculate Route"):
                         text-align:center;
                     ">
                       <div style="font-size:24px; font-weight:bold;">🚄 {train_kg:.2f} kg &nbsp; 🚌 {bus_kg:.2f} kg</div>
-                      <div style="font-size:14px; color:#666; margin-top:4px;">Public Transport Emissions</div>
+                      <div style="font-size:14px; color:#666; margin-top:4px;">Public Transport Emissions Comparison</div>
                     </div>
                 """, unsafe_allow_html=True)
 
