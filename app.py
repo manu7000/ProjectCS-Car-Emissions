@@ -150,21 +150,21 @@ else:
     df_m = vehicle_df[vehicle_df["Make"] == selected_make]  # filter by brand
     selected_fuel = st.sidebar.selectbox("Fuel Type", sorted(df_m["Fuel_Type1"].unique()))  # choose fuel text on the sidebar
     df_f = df_m[df_m["Fuel_Type1"] == selected_fuel]  # filter by fuel
-    selected_model = st.sidebar.selectbox("Model", sorted(df_f["Model"].unique()))  # choose model
+    selected_model = st.sidebar.selectbox("Model", sorted(df_f["Model"].unique()))  # choose model text on the sidebar
     df_mod = df_f[df_f["Model"] == selected_model]  # filter by model
     selected_year = st.sidebar.selectbox(  
         "Year",  
         sorted(df_mod["Year"].unique(), reverse=True)  
-    )  # choose year (newest first)
+    )  # to choose year in the sidebar
     final_row = vehicle_df[  
         (vehicle_df["Make"] == selected_make) &  
         (vehicle_df["Fuel_Type1"] == selected_fuel) &  
         (vehicle_df["Model"] == selected_model) &  
         (vehicle_df["Year"] == selected_year)  
-    ]  # lookup selected row
+    ]  # lookup at the selected row
 
 # Option to compare public transport
-compare_public_transport = st.sidebar.checkbox("Compare with public transport")  # toggle for bus/train comparison
+compare_public_transport = st.sidebar.checkbox("Compare with public transport")  # checkbox for bus/train comparison
 # -----------------------------------
 # MAIN LOGIC: CALCULATION + DISPLAY ----- AYMERIC -------
 # -----------------------------------
