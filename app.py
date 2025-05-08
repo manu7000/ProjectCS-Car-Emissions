@@ -101,7 +101,7 @@ if car_not_listed:
     final_row = pd.Series({"Co2__Tailpipe_For_Fuel_Type1": predicted_co2})
     selected_make, selected_model, selected_year, selected_fuel = "Custom", "Custom Entry", year, fuel_type
 else:
-    selected_make = st.sidebar.selectbox("Make", sorted(vehicle_df['Make'].dropna().unique()))
+    selected_make = st.sidebar.selectbox("Brand", sorted(vehicle_df['Make'].dropna().unique()))
     df_filtered = vehicle_df[vehicle_df['Make'] == selected_make]
     selected_fuel = st.sidebar.selectbox("Fuel Type", sorted(df_filtered['Fuel_Type1'].dropna().unique()))
     df_filtered = df_filtered[df_filtered['Fuel_Type1'] == selected_fuel]
