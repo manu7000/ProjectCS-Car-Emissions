@@ -1,252 +1,182 @@
 import streamlit as st
 import pandas as pd
+import pydeck as pdk
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.preprocessing import LabelEncoder
+import numpy as np
+from Map_API import autocomplete_address, get_coordinates, get_route_info
 
-###### PAGE SETUP ######
+# Set page configuration
 st.set_page_config(page_title="CO₂ Emission Calculator", page_icon="🚗", layout="centered")
 
-##### HEADER #####
+# -----------------------------------
+# Utility Functions YANNICK
+# -----------------------------------
+
+# Function to load the dataset
+@st.cache_data
+def load_vehicle_data(path: str) -> pd.DataFrame:
+    df = pd.read_csv(path, sep=";", encoding="utf-8-sig", engine="python")
+    df.columns = df.columns.str.strip().str.replace(" ", "_")
+    return df.dropna(subset=["Make", "Fuel_Type1", "Model", "Year", "Co2__Tailpipe_For_Fuel_Type1"])
+
+# Function to train the ML model
+@st.cache_resource
+def train_model(df):
+    df = df.dropna(subset=["Fuel_Type1", "Cylinders", "Year", "Co2__Tailpipe_For_Fuel_Type1"]).copy()
+    le = LabelEncoder()
+    df["Fuel_Type1_Encoded"] = le.fit_transform(df["Fuel_Type1"])
+    X = df[["Fuel_Type1_Encoded", "Cylinders", "Year"]]
+    y = df["Co2__Tailpipe_For_Fuel_Type1"]
+    model = DecisionTreeRegressor(random_state=42)
+    model.fit(X, y)
+    return model, le
+
+# Function to predict the Co2 emissions based on user input
+def predict_co2_emission(model, le, fuel_type, cylinders, year):
+    user_input = pd.DataFrame([[fuel_type, cylinders, year]], columns=["Fuel_Type1", "Cylinders", "Year"])
+    user_input["Fuel_Type1_Encoded"] = le.transform(user_input["Fuel_Type1"])
+    return model.predict(user_input[["Fuel_Type1_Encoded", "Cylinders", "Year"]])[0]
+
+# Function to display the map
+def display_route_map(route):
+    route_coords = [[lat, lon] for lon, lat in route['geometry']]
+    df = pd.DataFrame(route_coords, columns=["lat", "lon"])
+    df["lon_next"] = df["lon"].shift(-1)
+    df["lat_next"] = df["lat"].shift(-1)
+    df = df.dropna()
+
+    center_lat = (df["lat"].min() + df["lat"].max()) / 2
+    center_lon = (df["lon"].min() + df["lon"].max()) / 2
+    view_state = pdk.ViewState(latitude=center_lat, longitude=center_lon, zoom=7)
+
+#---------------- AYMERIC ----------------------------------------------------------------------------------------
+
+    layer = pdk.Layer(
+        "LineLayer",
+        data=df,
+        get_source_position=["lon", "lat"],
+        get_target_position=["lon_next", "lat_next"],
+        get_color=[0, 0, 255],
+        get_width=4
+    )
+
+    st.pydeck_chart(pdk.Deck(
+        layers=[layer],
+        initial_view_state=view_state,
+        map_style='mapbox://styles/mapbox/satellite-streets-v11'
+    ))
+
+# -----------------------------------
+# UI Elements
+# -----------------------------------
+
 st.title("Car Journey CO₂ Emission Calculator")
 st.write("Welcome! This app will help you calculate and compare the carbon emissions of your trips.")
 
-##### SIDEBAR ####
-#Loading data from the CSV file for sidebar
-df = pd.read_csv("all-vehicles-model@public.csv", sep=";", encoding="ISO-8859-1", engine="python")
-df.columns = df.columns.str.strip().str.replace(" ", "_")
+st.sidebar.header("Enter your trip information")
 
-# Drop rows with missing critical fields
-df = df.dropna(subset=["Make", "Fuel_Type1", "Model", "Year", "Co2__Tailpipe_For_Fuel_Type1"])
+# Address inputs
+start_input = st.sidebar.text_input("From:")
+selected_start = st.sidebar.selectbox("Select starting location:", autocomplete_address(start_input)) if start_input else None
 
+end_input = st.sidebar.text_input("To:")
+selected_end = st.sidebar.selectbox("Select destination:", autocomplete_address(end_input)) if end_input else None
 
-# ---- SIDEBAR: FULL CAR SELECTION ----
+# Load vehicle data
+try:
+    vehicle_df = load_vehicle_data("all-vehicles-model@public.csv")
+except Exception:
+    st.error("Could not load vehicle database.")
+    st.stop()
+
+model, le = train_model(vehicle_df)
+
+#---------------- KAIS -----------------------------------------------------------------------
+
 st.sidebar.header("Select Your Vehicle")
+car_not_listed = st.sidebar.checkbox("My car is not listed")
 
-# Step 1: Make
-makes = sorted(df['Make'].dropna().unique())
-selected_make = st.sidebar.selectbox("Make", makes)
+if car_not_listed:
+    fuel_type = st.sidebar.selectbox("Fuel Type", vehicle_df["Fuel_Type1"].dropna().unique())
+    cylinders = st.sidebar.number_input("Number of Cylinders", min_value=3, max_value=16, step=1)
+    year = st.sidebar.number_input("Year", min_value=1980, max_value=2025, step=1)
+    predicted_co2 = predict_co2_emission(model, le, fuel_type, cylinders, year)
+    st.sidebar.success(f"Predicted CO₂ Emission: {(predicted_co2 / 1.60934):.2f} g/km")
 
-# Step 2: Fuel Type
-filtered_df = df[df['Make'] == selected_make]
-fuel_types = sorted(filtered_df['Fuel_Type1'].dropna().unique())
-selected_fuel = st.sidebar.selectbox("Fuel Type", fuel_types)
-
-# Step 3: Model
-filtered_df = filtered_df[filtered_df['Fuel_Type1'] == selected_fuel]
-models = sorted(filtered_df['Model'].dropna().unique())
-selected_model = st.sidebar.selectbox("Model", models)
-
-# Step 4: Year
-filtered_df = filtered_df[filtered_df['Model'] == selected_model]
-years = sorted(filtered_df['Year'].dropna().unique(), reverse=True)
-selected_year = st.sidebar.selectbox("Year", years)
-
-# Step 5: Trip Distance
-distance_km = st.sidebar.number_input("Trip Distance (km)", min_value=1)
-
-# ---- MAIN DISPLAY ----
-st.header("Estimated Impact")
-
-# Final filter based on all four selections
-final_row = df[
-    (df['Make'] == selected_make) &
-    (df['Fuel_Type1'] == selected_fuel) &
-    (df['Model'] == selected_model) &
-    (df['Year'] == selected_year)
-]
-
-if not final_row.empty:
-    row = final_row.iloc[0]
-
-    co2_g_per_mile = row['Co2__Tailpipe_For_Fuel_Type1']
-    mpg = row.get('Combined_Mpg_For_Fuel_Type1')
-    ghg_score = row.get('GHG_Score')
-
-    st.success(f"{selected_make} {selected_model} ({selected_year}) - {selected_fuel}")
-
-    # --- CO₂ Emissions Calculation ---
-    if pd.notna(co2_g_per_mile) and co2_g_per_mile > 0:
-        co2_g_per_km = co2_g_per_mile / 1.60934
-        total_emissions_grams = co2_g_per_km * distance_km
-        total_emissions_kg = total_emissions_grams / 1000
-        st.metric("💨 CO₂ Emissions", f"{total_emissions_kg:.2f} kg")
-    else:
-        st.warning("💨 CO₂ emissions could not be calculated for the selected vehicle.")
-
-    # --- Fuel Consumption Calculation ---
-    if pd.notna(mpg) and mpg > 0:
-        l_per_100km = 235.21 / mpg
-        fuel_for_trip = (l_per_100km * distance_km) / 100
-        st.metric("⛽ Fuel Consumption", f"{fuel_for_trip:.2f} liters")
-    else:
-        st.warning("⛽ Fuel consumption could not be calculated for the selected vehicle.")
-
-    # --- GHG Score Display ---
-    if pd.notna(ghg_score) and ghg_score > 0:
-        if ghg_score >= 8:
-            color = "#2ECC71"  # green
-        elif ghg_score >= 5:
-            color = "#F39C12"  # orange
-        else:
-            color = "#E74C3C"  # red
-
-        st.markdown(
-            f"<div style='padding: 10px; background-color: {color}; border-radius: 8px; color: white; font-size: 18px;'>"
-            f"🌿 GHG Score: <strong>{int(ghg_score)}</strong> (out of 10)"
-            "</div>",
-            unsafe_allow_html=True
-        )
-    else:
-        st.warning("🌿 GHG score could not be calculated for the selected vehicle.")
+    final_row = pd.Series({"Co2__Tailpipe_For_Fuel_Type1": predicted_co2})
+    selected_make, selected_model, selected_year, selected_fuel = "Custom", "Custom Entry", year, fuel_type
 else:
-    st.info("No matching vehicle found. Please adjust your selection.")
+    selected_make = st.sidebar.selectbox("Make", sorted(vehicle_df['Make'].dropna().unique()))
+    df_filtered = vehicle_df[vehicle_df['Make'] == selected_make]
+    selected_fuel = st.sidebar.selectbox("Fuel Type", sorted(df_filtered['Fuel_Type1'].dropna().unique()))
+    df_filtered = df_filtered[df_filtered['Fuel_Type1'] == selected_fuel]
+    selected_model = st.sidebar.selectbox("Model", sorted(df_filtered['Model'].dropna().unique()))
+    df_filtered = df_filtered[df_filtered['Model'] == selected_model]
+    selected_year = st.sidebar.selectbox("Year", sorted(df_filtered['Year'].dropna().unique(), reverse=True))
 
+    final_row = vehicle_df[(vehicle_df['Make'] == selected_make) &
+                           (vehicle_df['Fuel_Type1'] == selected_fuel) &
+                           (vehicle_df['Model'] == selected_model) &
+                           (vehicle_df['Year'] == selected_year)]
 
 compare_public_transport = st.sidebar.checkbox("Compare with public transport")
-show_alternatives = st.sidebar.checkbox("Show alternative vehicles")
 
-########### MAIN SECTION ##############
-
-import pydeck as pdk
-
-# Import your functions
-from Map_API import autocomplete_address, get_coordinates, get_route_info
-
-########## USER INPUT ##########
-# START LOCATION 
-#enter a starting address
-start_input = st.text_input("From:")
-
-# Create an empty list to hold suggestions
-start_suggestions = []
-
-# Create a variable for the selected starting address
-selected_start = None
-
-# If the user types something and presses Enter
-if start_input:
+if selected_start and selected_end and st.sidebar.button("Calculate Route"):
     try:
-        # Call the autocomplete_address function to get suggestions
-        start_suggestions = autocomplete_address(start_input)
-        # Show the suggestions in a dropdown
-        selected_start = st.selectbox("Select starting location:", start_suggestions)
+        with st.spinner("Calculating route and emissions..."):
+            start_coords = get_coordinates(selected_start)
+            end_coords = get_coordinates(selected_end)
+            route = get_route_info(start_coords, end_coords)
+            distance_km = route['distance_km']
+
+        st.header("Estimated Impact")
+        row = final_row.iloc[0] if not car_not_listed else final_row
+        co2_g_per_mile = row['Co2__Tailpipe_For_Fuel_Type1']
+        co2_g_per_km = co2_g_per_mile / 1.60934
+        total_emissions_grams = co2_g_per_km * distance_km
+
+#---------------- MANU-------------------------------------------------------------------------
+
+        st.success(f"{selected_make} {selected_model} ({selected_year}) - {selected_fuel}")
+        st.info(f"📏 Distance: **{distance_km:.2f} km**")
+
+        travel_time_min = route['duration_min']
+        st.info(f"🕒 Travel time: **{travel_time_min // 60:.0f}h {travel_time_min % 60:.0f} min**")
+
+        st.metric("💨 CO₂ Emissions", f"{total_emissions_grams / 1000:.2f} kg")
+
+        if compare_public_transport:
+            st.subheader("🚆 Public Transport CO₂ Comparison")
+            train_kg = 41 * distance_km / 1000
+            bus_kg = 105 * distance_km / 1000
+            car_kg = total_emissions_grams / 1000
+            st.metric("🚄 Train Emissions", f"{train_kg:.2f} kg")
+            st.metric("🚌 Bus Emissions", f"{bus_kg:.2f} kg")
+            if car_kg > train_kg:
+                st.success(f"Train saves ~{car_kg - train_kg:.2f} kg CO₂")
+            if car_kg > bus_kg:
+                st.success(f"Bus saves ~{car_kg - bus_kg:.2f} kg CO₂")
+
+        mpg = row.get('Combined_Mpg_For_Fuel_Type1', np.nan)
+        if pd.notna(mpg) and mpg > 0:
+            fuel_used = (235.21 / mpg) * distance_km / 100
+            st.metric("⛽ Fuel Consumption", f"{fuel_used:.2f} liters")
+
+        ghg_score = row.get('GHG_Score', np.nan)
+        if pd.notna(ghg_score):
+            color = "#2ECC71" if ghg_score >= 8 else "#F39C12" if ghg_score >= 5 else "#E74C3C"
+            st.markdown(f"""
+                <div style='padding: 10px; background-color: {color}; border-radius: 8px; color: white;'>
+                🌿 GHG Score: <strong>{int(ghg_score)}</strong> (out of 10)</div>
+            """, unsafe_allow_html=True)
+
+        st.header("Route Map")
+        display_route_map(route)
 
     except Exception as e:
-        st.error(f"Could not get start location suggestions: {e}")
+        st.error("❌ An error occurred during route calculation.")
+        st.exception(e)
 
-# END LOCATION 
-# Same coding logic as for the start location 
-end_input = st.text_input("To:")
-end_suggestions = []
-selected_end = None
-if end_input:
-    try:
-        end_suggestions = autocomplete_address(end_input)
-        selected_end = st.selectbox("Select destination:", end_suggestions)
-
-    except Exception as e:
-        st.error(f"Could not get destination suggestions: {e}")
-
-########## CALCULATE ROUTE ##########
-
-#User must have selected both start and end destinations in order to calculate route 
-if selected_start and selected_end and st.button("Calculate Route"):
-    try:
-        ########## GET COORDINATES ##########
-
-        # Get the coordinates (latitude and longitude) of the selected start location
-        start_coords = get_coordinates(selected_start)
-
-        # Get the coordinates of the selected destination
-        end_coords = get_coordinates(selected_end)
-
-        ########## GET ROUTE DATA ##########
-
-        # Call the get_route_info function to get route distance, duration, and geometry
-        route = get_route_info(start_coords, end_coords)
-
-        ########## SHOW ROUTE INFO ##########
-
-        # Show a success message
-        st.success("Your route has been calculated successfully.")
-
-        # Show the distance in kilometers
-        st.info(f"*Distance:* **{route['distance_km']:.2f} km**") # * for itallic and ** for bold text 
-
-        ########## FORMAT TRAVEL TIME ##########
-
-        travel_time_min = route['travel_time_min']
-
-        # If the trip is longer than 60 minutes, show hours and minutes
-        if travel_time_min >= 60:
-            hours = int(travel_time_min // 60)
-            minutes = int(travel_time_min % 60)
-            st.info(f"*Travel time:* **{hours}h {minutes} min**")
-        else:
-            # Otherwise, just show minutes
-            st.info(f"*Travel time:* **{travel_time_min:.1f} minutes**")
-
-
-        ######### MAP DATA ########## ----> I don't understand shit, GPT made it 
-
-        # The API gives coordinates as [longitude, latitude].
-        # For mapping, must reverse them to [latitude, longitude].
-
-        route_coords = [[lat, lon] for lon, lat in route['geometry']]
-
-        # Create a DataFrame with latitude and longitude columns
-        df_map = pd.DataFrame(route_coords, columns=["lat", "lon"])
-
-        # Create two new columns for the next point in the line (to draw segments)
-        df_map["lon_next"] = df_map["lon"].shift(-1)
-        df_map["lat_next"] = df_map["lat"].shift(-1)
-
-        # Remove any rows where the next point is missing (last row)
-        df_map = df_map.dropna()
-
-        ##### MAP VIEW #####
-
-        # Find the smallest and largest latitude and longitude values
-        min_lat = df_map["lat"].min()
-        max_lat = df_map["lat"].max()
-        min_lon = df_map["lon"].min()
-        max_lon = df_map["lon"].max()
-
-        # Calculate the center point between the minimum and maximum values
-        center_lat = (min_lat + max_lat) / 2
-        center_lon = (min_lon + max_lon) / 2
-
-        # Set the initial view of the map
-        # Zoom level 7 means fairly zoomed out — adjust if needed
-        view_state = pdk.ViewState(
-            latitude=center_lat,
-            longitude=center_lon,
-            zoom=7
-        )
-
-        #### MAP LAYER #### ---> Also don't understand shit, GPT did 
-
-        # Create a line layer to draw the route
-        layer = pdk.Layer(
-            "LineLayer",
-            data=df_map,
-            get_source_position=["lon", "lat"],  # Starting points
-            get_target_position=["lon_next", "lat_next"],  # Ending points
-            get_color=[0, 0, 255],  # Orange line
-            get_width=5
-        )
-
-        ###### DISPLAY MAP ####### ----> Made by GPT 
-
-        # Show the map with the route
-        st.pydeck_chart(pdk.Deck(
-            layers=[layer],
-            initial_view_state=view_state,
-            map_style= 'mapbox://styles/mapbox/satellite-streets-v11' # Adding satellite view because looks really cool 
-        ))
-
-    except Exception as e:
-        st.error(f"Error computing route: {e}")
-
-########## FOOTER #########
 st.markdown("""---""")
-st.caption("CS Project. Designed by Aymeric, Kaïs, Manu adn Yannick. Group 2.06" \
-           "Data sources: OpenRouteService, Carbon Interface API,.")
+st.caption("CS Project. Designed by Aymeric, Kaïs, Emmanuel and Yannick. Group 2.06. Data sources: OpenRouteService, EEA, EPA.")
