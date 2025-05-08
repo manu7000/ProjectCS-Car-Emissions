@@ -178,9 +178,12 @@ if selected_start and selected_end and st.sidebar.button("Calculate Route"):
                 ">
                   <div style="font-size:28px;">{icon}</div>
                   <div style="font-size:24px; font-weight:bold; margin:4px 0;">{value}</div>
-                  <div style="color:#666;">{label}</div>
+                  <div style="font-size:14px; color:#666;">{label}</div>
                 </div>
             """, unsafe_allow_html=True)
+
+        # add space between the rows
+        st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
 
         # GHG Score card and Public Transport card side by side
         g1, g2 = st.columns(2, gap="small")
@@ -195,8 +198,8 @@ if selected_start and selected_end and st.sidebar.button("Calculate Route"):
                         color:white;
                         text-align:center;
                     ">
-                      <div style="font-size:24px;">🌿 GHG Score</div>
-                      <div style="font-size:20px; font-weight:bold;">{int(ghg_score)}/10</div>
+                      <div style="font-size:24px; font-weight:bold;">{int(ghg_score)}/10</div>
+                      <div style="font-size:14px; margin-top:4px;">GHG Score</div>
                     </div>
                 """, unsafe_allow_html=True)
         with g2:
@@ -211,8 +214,8 @@ if selected_start and selected_end and st.sidebar.button("Calculate Route"):
                         box-shadow:0px 1px 4px rgba(0,0,0,0.1);
                         text-align:center;
                     ">
-                      <div style="font-size:24px;">🚄 {train_kg:.2f} kg &nbsp; 🚌 {bus_kg:.2f} kg</div>
-                      <div style="color:#666; margin-top:4px;">Public Transport Emissions</div>
+                      <div style="font-size:24px; font-weight:bold;">🚄 {train_kg:.2f} kg &nbsp; 🚌 {bus_kg:.2f} kg</div>
+                      <div style="font-size:14px; color:#666; margin-top:4px;">Public Transport Emissions</div>
                     </div>
                 """, unsafe_allow_html=True)
 
