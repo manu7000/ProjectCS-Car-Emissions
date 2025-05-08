@@ -119,7 +119,7 @@ else:
 compare_public_transport = st.sidebar.checkbox("Compare with public transport")
 
 # -----------------------------------
-# MAIN LOGIC
+# MAIN LOGIC ------------ AYMERIC ----------------------------------------------------------------------
 # -----------------------------------
 if selected_start and selected_end and st.sidebar.button("Calculate Route"):
     try:
@@ -234,6 +234,12 @@ if selected_start and selected_end and st.sidebar.button("Calculate Route"):
                       </div>
                     </div>
                 """, unsafe_allow_html=True)
+            #test adding the percentage change for bus and train 
+            percent_train = (car_emission_kg - train_kg) / car_emission_kg * 100 if car_emission_kg > train_kg else None 
+            percent_bus = (car_emission_kg - bus_kg) / car_emission_kg * 100 if car_emission_kg > bus_kg else None #functions to calculate the percentage difference 
+
+            st.info (f"🚄 Taking the train would reduce your emissions by {percent_train: .1f}% \n" 
+                    f"🚌 Taking the bus would reduce your emissions by {percent_bus: .1f}%") #text box for the emissions 
 
         # Route Map
         st.header("Route Map")
