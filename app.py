@@ -167,7 +167,7 @@ if selected_start and selected_end and st.sidebar.button("Calculate Route"):
                 color = "#2ECC71" if ghg_score >= 8 else "#F39C12" if ghg_score >= 5 else "#E74C3C"
                 st.markdown(
                     f"<div style='padding:8px; background:{color}; border-radius:6px; color:white; text-align:center;'>"
-                    f"🍃 GHG Score: **{int(ghg_score)}/10</div>**",
+                    f"🍃 GHG Score: {int(ghg_score)}/10</div>",
                     unsafe_allow_html=True
                 )
 
