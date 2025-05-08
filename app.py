@@ -144,8 +144,7 @@ if selected_start and selected_end and st.sidebar.button("Calculate Route"):
         # Row 1: Vehicle / Distance / Time
         c1, c2, c3 = st.columns([2, 1, 1])
         with c1:
-            st.success(f"{selected_make} {selected_model} ({selected_year})")
-            st.write(f"**{selected_fuel}**")
+             st.success(f"{selected_make} {selected_model} ({selected_year})\n**{selected_fuel}**")
         with c2:
             st.metric("📏 Distance", f"{distance_km:.2f} km")
         with c3:
@@ -168,7 +167,7 @@ if selected_start and selected_end and st.sidebar.button("Calculate Route"):
                 color = "#2ECC71" if ghg_score >= 8 else "#F39C12" if ghg_score >= 5 else "#E74C3C"
                 st.markdown(
                     f"<div style='padding:8px; background:{color}; border-radius:6px; color:white; text-align:center;'>"
-                    f"🌿 GHG Score: **{int(ghg_score)}**/10</div>",
+                    f"🍃 GHG Score: {int(ghg_score)}/10</div>",
                     unsafe_allow_html=True
                 )
 
