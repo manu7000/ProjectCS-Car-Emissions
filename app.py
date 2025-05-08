@@ -109,19 +109,14 @@ st.title("Car Journey CO₂ Emission Calculator")  #display main app title
 st.write("Welcome! This app will help you calculate and compare the carbon emissions of your trips.")  #subtitle
 
 # Sidebar: Trip address inputs
-st.sidebar.header("Enter your trip information")  # adds a section heading in the sidebar
+st.sidebar.header("Enter your trip information")  #sidebar section header
+start_input = st.sidebar.text_input("From:")  #text box for departure address
+selected_start = st.sidebar.selectbox(  
+    "Select starting location:",  
+    autocomplete_address(start_input)  
+) if start_input else None  #show autocomplete dropdown only after typing
 
-start_input = st.sidebar.text_input("From:")  
-# renders a text box labeled “From:” where the user can type their departure address
-
-selected_start = (
-    st.sidebar.selectbox(
-        "Select starting location:",       # label for the dropdown
-        autocomplete_address(start_input)  # list of suggestions fetched from the Map API
-    )
-    if start_input                      # only show the dropdown once the user has typed something
-    else None                           # otherwise keep it hidden
-)
+end_input = st.sidebar.text_input("To:")  #text box for destination address
 selected_end = st.sidebar.selectbox(  
     "Select destination:",  
     autocomplete_address(end_input)  
