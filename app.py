@@ -109,18 +109,18 @@ st.title("Car Journey CO₂ Emission Calculator")  #display main app title
 st.write("Welcome! This app will help you calculate and compare the carbon emissions of your trips.")  #subtitle
 
 # Sidebar: Trip address inputs
-st.sidebar.header("Enter your trip information")  #sidebar section header
+st.sidebar.header("Enter your trip information")  #sidebar section header text
 start_input = st.sidebar.text_input("From:")  #text box for departure address
 selected_start = st.sidebar.selectbox(  
     "Select starting location:",  
     autocomplete_address(start_input)  
-) if start_input else None  #show autocomplete dropdown only after typing
+) if start_input else None  #show autocomplete dropdown only after typing. Only show the sropdown if there is an input
 
 end_input = st.sidebar.text_input("To:")  #text box for destination address
 selected_end = st.sidebar.selectbox(  
     "Select destination:",  
     autocomplete_address(end_input)  
-) if end_input else None  # show autocomplete dropdown only after typing
+) if end_input else None  # show autocomplete dropdown only after typing. Only show the sropdown if there is an input
 
 # Load and train vehicle data
 try:  
@@ -133,20 +133,22 @@ model, le = train_model(vehicle_df)  # train ML model + encoder for custom CO₂
 
 # Sidebar: Vehicle selection or custom entry
 st.sidebar.header("Select Your Vehicle")  # sidebar section header
-car_not_listed = st.sidebar.checkbox("My car is not listed")  # toggle for custom vehicle
+car_not_listed = st.sidebar.checkbox("My car is not listed")  # checkbox for car not listed
 
+# What is showed on the interface depending on if the car is listed or not
+# If car is not listed checkbox is selected a different dropdown menu appears
 if car_not_listed:
     fuel_type = st.sidebar.selectbox("Fuel Type", vehicle_df["Fuel_Type1"].unique())  # fuel dropdown
     cylinders = st.sidebar.number_input("Number of Cylinders", min_value=3, max_value=16, step=1)  # cylinders input
     year = st.sidebar.number_input("Year", min_value=1980, max_value=2025, step=1)  # year input
-    predicted_co2 = predict_co2_emission(model, le, fuel_type, cylinders, year)  # predict CO₂ via ML
-    st.sidebar.success(f"Predicted CO₂ Emission: {(predicted_co2/1.60934):.2f} g/km")  # show prediction
-    final_row = pd.Series({"Co2__Tailpipe_For_Fuel_Type1": predicted_co2})  # single‐row fallback
-    selected_make, selected_model, selected_year, selected_fuel = "Custom", "Custom Entry", year, fuel_type  # mark custom
+    predicted_co2 = predict_co2_emission(model, le, fuel_type, cylinders, year)  # predict CO2 via ML
+    st.sidebar.success(f"Predicted CO₂ Emission: {(predicted_co2/1.60934):.2f} g/km")  # show CO2 prediction on the screen (divided by 1.6 because it's in mile in the csv file)
+    final_row = pd.Series({"Co2__Tailpipe_For_Fuel_Type1": predicted_co2})  # single‐row fallback for the code to work whether the data is from CSV or predicted by ML
+    selected_make, selected_model, selected_year, selected_fuel = "Custom", "Custom Entry", year, fuel_type  # gives placeholder values for make and model so that the code can treat it as normal selection
 else:
-    selected_make = st.sidebar.selectbox("Brand", sorted(vehicle_df["Make"].unique()))  # choose brand
+    selected_make = st.sidebar.selectbox("Brand", sorted(vehicle_df["Make"].unique()))  # choose brand text on the sidebar
     df_m = vehicle_df[vehicle_df["Make"] == selected_make]  # filter by brand
-    selected_fuel = st.sidebar.selectbox("Fuel Type", sorted(df_m["Fuel_Type1"].unique()))  # choose fuel
+    selected_fuel = st.sidebar.selectbox("Fuel Type", sorted(df_m["Fuel_Type1"].unique()))  # choose fuel text on the sidebar
     df_f = df_m[df_m["Fuel_Type1"] == selected_fuel]  # filter by fuel
     selected_model = st.sidebar.selectbox("Model", sorted(df_f["Model"].unique()))  # choose model
     df_mod = df_f[df_f["Model"] == selected_model]  # filter by model
