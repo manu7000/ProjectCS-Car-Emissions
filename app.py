@@ -105,75 +105,64 @@ def display_route_map(route: dict):
 # UI LAYOUT: HEADER + SIDEBAR ----- KAIS-------
 # -----------------------------------
 
-st.title("Car Journey CO₂ Emission Calculator")
-st.write("Welcome! This app will help you calculate and compare the carbon emissions of your trips.")
+st.title("Car Journey CO₂ Emission Calculator")  # display main app title
+st.write("Welcome! This app will help you calculate and compare the carbon emissions of your trips.")  # subtitle
 
 # Sidebar: Trip address inputs
-st.sidebar.header("Enter your trip information")
-start_input = st.sidebar.text_input("From:")
-selected_start = (
-    st.sidebar.selectbox(
-        "Select starting location:",
-        autocomplete_address(start_input)
-    )
-    if start_input else None
-)
+st.sidebar.header("Enter your trip information")  # sidebar section header
+start_input = st.sidebar.text_input("From:")  # text box for departure address
+selected_start = st.sidebar.selectbox(  
+    "Select starting location:",  
+    autocomplete_address(start_input)  
+) if start_input else None  # show autocomplete dropdown only after typing
 
-end_input = st.sidebar.text_input("To:")
-selected_end = (
-    st.sidebar.selectbox(
-        "Select destination:",
-        autocomplete_address(end_input)
-    )
-    if end_input else None
-)
+end_input = st.sidebar.text_input("To:")  # text box for destination address
+selected_end = st.sidebar.selectbox(  
+    "Select destination:",  
+    autocomplete_address(end_input)  
+) if end_input else None  # show autocomplete dropdown only after typing
 
 # Load and train vehicle data
-try:
-    vehicle_df = load_vehicle_data("all-vehicles-model@public.csv")
-except Exception:
-    st.error("Could not load vehicle database.")
-    st.stop()
+try:  
+    vehicle_df = load_vehicle_data("all-vehicles-model@public.csv")  # read & clean CSV
+except Exception:  
+    st.error("Could not load vehicle database.")  # show error if load fails
+    st.stop()  # stop app execution on failure
 
-model, le = train_model(vehicle_df)
+model, le = train_model(vehicle_df)  # train ML model + encoder for custom CO₂ predictions
 
 # Sidebar: Vehicle selection or custom entry
-st.sidebar.header("Select Your Vehicle")
-car_not_listed = st.sidebar.checkbox("My car is not listed")
+st.sidebar.header("Select Your Vehicle")  # sidebar section header
+car_not_listed = st.sidebar.checkbox("My car is not listed")  # toggle for custom vehicle
+
 if car_not_listed:
-    # Custom vehicle entry via ML prediction
-    fuel_type = st.sidebar.selectbox("Fuel Type", vehicle_df["Fuel_Type1"].unique())
-    cylinders = st.sidebar.number_input("Number of Cylinders", min_value=3, max_value=16, step=1)
-    year = st.sidebar.number_input("Year", min_value=1980, max_value=2025, step=1)
-    predicted_co2 = predict_co2_emission(model, le, fuel_type, cylinders, year)
-    st.sidebar.success(f"Predicted CO₂ Emission: {(predicted_co2 / 1.60934):.2f} g/km")
-    final_row = pd.Series({"Co2__Tailpipe_For_Fuel_Type1": predicted_co2})
-    selected_make = "Custom"
-    selected_model = "Custom Entry"
-    selected_year = year
-    selected_fuel = fuel_type
+    fuel_type = st.sidebar.selectbox("Fuel Type", vehicle_df["Fuel_Type1"].unique())  # fuel dropdown
+    cylinders = st.sidebar.number_input("Number of Cylinders", min_value=3, max_value=16, step=1)  # cylinders input
+    year = st.sidebar.number_input("Year", min_value=1980, max_value=2025, step=1)  # year input
+    predicted_co2 = predict_co2_emission(model, le, fuel_type, cylinders, year)  # predict CO₂ via ML
+    st.sidebar.success(f"Predicted CO₂ Emission: {(predicted_co2/1.60934):.2f} g/km")  # show prediction
+    final_row = pd.Series({"Co2__Tailpipe_For_Fuel_Type1": predicted_co2})  # single‐row fallback
+    selected_make, selected_model, selected_year, selected_fuel = "Custom", "Custom Entry", year, fuel_type  # mark custom
 else:
-    # Predefined vehicle selection from CSV
-    selected_make = st.sidebar.selectbox("Brand", sorted(vehicle_df["Make"].unique()))
-    df_m = vehicle_df[vehicle_df["Make"] == selected_make]
-    selected_fuel = st.sidebar.selectbox("Fuel Type", sorted(df_m["Fuel_Type1"].unique()))
-    df_f = df_m[df_m["Fuel_Type1"] == selected_fuel]
-    selected_model = st.sidebar.selectbox("Model", sorted(df_f["Model"].unique()))
-    df_mod = df_f[df_f["Model"] == selected_model]
-    selected_year = st.sidebar.selectbox(
-        "Year",
-        sorted(df_mod["Year"].unique(), reverse=True)
-    )
-    final_row = vehicle_df[
-        (vehicle_df["Make"] == selected_make) &
-        (vehicle_df["Fuel_Type1"] == selected_fuel) &
-        (vehicle_df["Model"] == selected_model) &
-        (vehicle_df["Year"] == selected_year)
-    ]
+    selected_make = st.sidebar.selectbox("Brand", sorted(vehicle_df["Make"].unique()))  # choose brand
+    df_m = vehicle_df[vehicle_df["Make"] == selected_make]  # filter by brand
+    selected_fuel = st.sidebar.selectbox("Fuel Type", sorted(df_m["Fuel_Type1"].unique()))  # choose fuel
+    df_f = df_m[df_m["Fuel_Type1"] == selected_fuel]  # filter by fuel
+    selected_model = st.sidebar.selectbox("Model", sorted(df_f["Model"].unique()))  # choose model
+    df_mod = df_f[df_f["Model"] == selected_model]  # filter by model
+    selected_year = st.sidebar.selectbox(  
+        "Year",  
+        sorted(df_mod["Year"].unique(), reverse=True)  
+    )  # choose year (newest first)
+    final_row = vehicle_df[  
+        (vehicle_df["Make"] == selected_make) &  
+        (vehicle_df["Fuel_Type1"] == selected_fuel) &  
+        (vehicle_df["Model"] == selected_model) &  
+        (vehicle_df["Year"] == selected_year)  
+    ]  # lookup selected row
 
 # Option to compare public transport
-compare_public_transport = st.sidebar.checkbox("Compare with public transport")
-
+compare_public_transport = st.sidebar.checkbox("Compare with public transport")  # toggle for bus/train comparison
 # -----------------------------------
 # MAIN LOGIC: CALCULATION + DISPLAY ----- AYMERIC -------
 # -----------------------------------
