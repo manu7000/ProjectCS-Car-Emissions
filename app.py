@@ -145,6 +145,7 @@ if selected_start and selected_end and st.sidebar.button("Calculate Route"):
         c1, c2, c3 = st.columns([2, 1, 1])
         with c1:
             st.success(f"{selected_make} {selected_model} ({selected_year})")
+            st.write(f"**{selected_fuel}**")
         with c2:
             st.metric("📏 Distance", f"{distance_km:.2f} km")
         with c3:
@@ -167,7 +168,7 @@ if selected_start and selected_end and st.sidebar.button("Calculate Route"):
                 color = "#2ECC71" if ghg_score >= 8 else "#F39C12" if ghg_score >= 5 else "#E74C3C"
                 st.markdown(
                     f"<div style='padding:8px; background:{color}; border-radius:6px; color:white; text-align:center;'>"
-                    f"🌿 GHG Score: {int(ghg_score)}/10</div>",
+                    f"🌿 GHG Score: **{int(ghg_score)}**/10</div>",
                     unsafe_allow_html=True
                 )
 
@@ -175,22 +176,4 @@ if selected_start and selected_end and st.sidebar.button("Calculate Route"):
         if compare_public_transport:
             st.subheader("Public Transport Comparison")
             t1, t2, t3 = st.columns(3)
-            train_kg = 41 * distance_km / 1000
-            bus_kg   = 105 * distance_km / 1000
-            t1.metric("🚄 Train", f"{train_kg:.2f} kg")
-            t2.metric("🚌 Bus",   f"{bus_kg:.2f} kg")
-            t3.write("")
-
-        # Route Map
-        st.header("Route Map")
-        display_route_map(route)
-
-    except Exception as e:
-        st.error("❌ An error occurred during route calculation.")
-        st.exception(e)
-
-# -----------------------------------
-# FOOTER
-# -----------------------------------
-st.markdown("---")
-st.caption("CS Project by Aymeric, Kaïs, Emmanuel and Yannick. Group 2.06. Data sources: OpenRouteService, EEA, EPA.")
+            train_kg = 41 * distance
