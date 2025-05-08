@@ -7,7 +7,7 @@ import numpy as np
 from Map_API import autocomplete_address, get_coordinates, get_route_info
 
 # -----------------------------------
-# PAGE CONFIGURATION
+# PAGE CONFIGURATION 
 # -----------------------------------
 st.set_page_config(
     page_title="CO₂ Emission Calculator",
@@ -16,7 +16,7 @@ st.set_page_config(
 )
 
 # -----------------------------------
-# UTILITY FUNCTIONS
+# UTILITY FUNCTIONS ---- YANNICK -----
 # -----------------------------------
 
 @st.cache_data
@@ -102,7 +102,7 @@ def display_route_map(route: dict):
     )
 
 # -----------------------------------
-# UI LAYOUT: HEADER + SIDEBAR
+# UI LAYOUT: HEADER + SIDEBAR ----- KAIS-------
 # -----------------------------------
 
 st.title("Car Journey CO₂ Emission Calculator")
@@ -175,7 +175,7 @@ else:
 compare_public_transport = st.sidebar.checkbox("Compare with public transport")
 
 # -----------------------------------
-# MAIN LOGIC: CALCULATION + DISPLAY
+# MAIN LOGIC: CALCULATION + DISPLAY ----- AYMERIC -------
 # -----------------------------------
 if selected_start and selected_end and st.sidebar.button("Calculate Route"):
     try:
@@ -241,7 +241,7 @@ if selected_start and selected_end and st.sidebar.button("Calculate Route"):
                   <div style="font-size:14px; color:#666;">{lab}</div>
                 </div>
             """, unsafe_allow_html=True)
-
+# ---------------- MANU -----------------------------------------------------------------------
         # Add vertical spacing before next cards row
         st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
 
