@@ -182,33 +182,39 @@ if selected_start and selected_end and st.sidebar.button("Calculate Route"):
                 </div>
             """, unsafe_allow_html=True)
 
-        # GHG Score card
-        if pd.notna(ghg_score):
-            cols2 = st.columns([1,1,1,1], gap="small")
-            color = "#2ECC71" if ghg_score >= 8 else "#F39C12" if ghg_score >= 5 else "#E74C3C"
-            cols2[0].markdown(f"""
-                <div style="
-                    padding:20px;
-                    background-color:{color};
-                    border-radius:8px;
-                    color:white;
-                    text-align:center;
-                ">
-                  <div style="font-size:24px;">🌿</div>
-                  <div style="font-size:20px; font-weight:bold;">{int(ghg_score)}/10</div>
-                  <div style="margin-top:4px;">GHG Score</div>
-                </div>
-            """, unsafe_allow_html=True)
-            cols2[1].write(""); cols2[2].write(""); cols2[3].write("")
-
-        # Optional public transport comparison
-        if compare_public_transport:
-            st.subheader("Public Transport Comparison")
-            t1, t2, t3, t4 = st.columns(4, gap="small")
-            train_kg = 41 * distance_km / 1000
-            bus_kg   = 105 * distance_km / 1000
-            t1.metric("🚄 Train", f"{train_kg:.2f} kg")
-            t2.metric("🚌 Bus",   f"{bus_kg:.2f} kg")
+        # GHG Score card and Public Transport card side by side
+        g1, g2 = st.columns(2, gap="small")
+        with g1:
+            if pd.notna(ghg_score):
+                color = "#2ECC71" if ghg_score >= 8 else "#F39C12" if ghg_score >= 5 else "#E74C3C"
+                st.markdown(f"""
+                    <div style="
+                        padding:20px;
+                        background-color:{color};
+                        border-radius:8px;
+                        color:white;
+                        text-align:center;
+                    ">
+                      <div style="font-size:24px;">🌿 GHG Score</div>
+                      <div style="font-size:20px; font-weight:bold;">{int(ghg_score)}/10</div>
+                    </div>
+                """, unsafe_allow_html=True)
+        with g2:
+            if compare_public_transport:
+                train_kg = 41 * distance_km / 1000
+                bus_kg   = 105 * distance_km / 1000
+                st.markdown(f"""
+                    <div style="
+                        padding:20px;
+                        background-color:white;
+                        border-radius:8px;
+                        box-shadow:0px 1px 4px rgba(0,0,0,0.1);
+                        text-align:center;
+                    ">
+                      <div style="font-size:24px;">🚄 {train_kg:.2f} kg &nbsp; 🚌 {bus_kg:.2f} kg</div>
+                      <div style="color:#666; margin-top:4px;">Public Transport Emissions</div>
+                    </div>
+                """, unsafe_allow_html=True)
 
         # Route Map
         st.header("Route Map")
