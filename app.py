@@ -124,62 +124,91 @@ compare_public_transport = st.sidebar.checkbox("Compare with public transport")
 if selected_start and selected_end and st.sidebar.button("Calculate Route"):
     try:
         with st.spinner("Calculating route and emissions..."):
-            start_coords = get_coordinates(selected_start)
-            end_coords   = get_coordinates(selected_end)
-            route        = get_route_info(start_coords, end_coords)
-            distance_km  = route['distance_km']
-            duration_min = route['duration_min']
+            start_coords  = get_coordinates(selected_start)
+            end_coords    = get_coordinates(selected_end)
+            route         = get_route_info(start_coords, end_coords)
+            distance_km   = route['distance_km']
+            duration_min  = route['duration_min']
 
         # retrieve vehicle/co2 info
-        row = final_row.iloc[0] if not car_not_listed else final_row
-        co2_g_mile       = row['Co2__Tailpipe_For_Fuel_Type1']
-        mpg              = row.get('Combined_Mpg_For_Fuel_Type1', np.nan)
-        ghg_score        = row.get('GHG_Score', np.nan)
-        car_emission_kg  = (co2_g_mile / 1.60934) * distance_km / 1000
+        row             = final_row.iloc[0] if not car_not_listed else final_row
+        co2_g_mile      = row['Co2__Tailpipe_For_Fuel_Type1']
+        mpg             = row.get('Combined_Mpg_For_Fuel_Type1', np.nan)
+        ghg_score       = row.get('GHG_Score', np.nan)
+        car_emission_kg = (co2_g_mile / 1.60934) * distance_km / 1000
 
         # ---------------- MANU-------------------------------------------------------------------------
         # Dashboard‐style layout for Estimated Impact
         st.header("Estimated Impact")
 
-        # Row 1: Vehicle / Distance / Time
-        c1, c2, c3 = st.columns([2, 1, 1])
-        with c1:
-             st.success(f"{selected_make} {selected_model} ({selected_year})\n**{selected_fuel}**")
-        with c2:
-            st.metric("📏 Distance", f"{distance_km:.2f} km")
-        with c3:
-            if duration_min >= 60:
-                h, m = divmod(int(duration_min), 60)
-                st.metric("🕒 Travel Time", f"{h}h {m}m")
-            else:
-                st.metric("🕒 Travel Time", f"{duration_min:.0f} min")
+        # Info box about annual carbon budget
+        st.info(
+            "💡 In order to halt climate change, the maximum CO₂ that can be emitted per person per year "
+            "is roughly **600 kg CO₂**."
+        )
 
-        # Row 2: CO₂ / Fuel / GHG
-        d1, d2, d3 = st.columns(3)
-        with d1:
-            st.metric("💨 CO₂ Emissions", f"{car_emission_kg:.2f} kg")
-        with d2:
-            if pd.notna(mpg) and mpg > 0:
-                liters = (235.21 / mpg) * distance_km / 100
-                st.metric("⛽ Fuel Consumption", f"{liters:.2f} L")
-        with d3:
-            if pd.notna(ghg_score):
-                color = "#2ECC71" if ghg_score >= 8 else "#F39C12" if ghg_score >= 5 else "#E74C3C"
-                st.markdown(
-                    f"<div style='padding:8px; background:{color}; border-radius:6px; color:white; text-align:center;'>"
-                    f"🍃 GHG Score: {int(ghg_score)}/10</div>",
-                    unsafe_allow_html=True
-                )
+        # prepare formatted values
+        if duration_min >= 60:
+            h, m = divmod(int(duration_min), 60)
+            travel_str = f"{h}h {m}m"
+        else:
+            travel_str = f"{duration_min:.0f}m"
 
-        # (Optional) Public transport comparison
+        trip_L = (235.21 / mpg) * distance_km / 100 if pd.notna(mpg) and mpg > 0 else np.nan
+
+        # Cards: Distance / Time / CO₂ / Fuel
+        labels = ["Distance", "Travel Time", "CO₂ Emissions", "Fuel Consumption"]
+        icons  = ["📏", "🕒", "💨", "⛽"]
+        values = [
+            f"{distance_km:.2f} km",
+            travel_str,
+            f"{car_emission_kg:.2f} kg",
+            f"{trip_L:.2f} L"
+        ]
+
+        cols = st.columns(4, gap="small")
+        for col, icon, label, value in zip(cols, icons, labels, values):
+            col.markdown(f"""
+                <div style="
+                    padding:20px;
+                    background-color: white;
+                    border-radius:8px;
+                    box-shadow:0px 1px 4px rgba(0,0,0,0.1);
+                    text-align:center;
+                ">
+                  <div style="font-size:28px;">{icon}</div>
+                  <div style="font-size:24px; font-weight:bold; margin:4px 0;">{value}</div>
+                  <div style="color:#666;">{label}</div>
+                </div>
+            """, unsafe_allow_html=True)
+
+        # GHG Score card
+        if pd.notna(ghg_score):
+            cols2 = st.columns([1,1,1,1], gap="small")
+            color = "#2ECC71" if ghg_score >= 8 else "#F39C12" if ghg_score >= 5 else "#E74C3C"
+            cols2[0].markdown(f"""
+                <div style="
+                    padding:20px;
+                    background-color:{color};
+                    border-radius:8px;
+                    color:white;
+                    text-align:center;
+                ">
+                  <div style="font-size:24px;">🌿</div>
+                  <div style="font-size:20px; font-weight:bold;">{int(ghg_score)}/10</div>
+                  <div style="margin-top:4px;">GHG Score</div>
+                </div>
+            """, unsafe_allow_html=True)
+            cols2[1].write(""); cols2[2].write(""); cols2[3].write("")
+
+        # Optional public transport comparison
         if compare_public_transport:
             st.subheader("Public Transport Comparison")
-            t1, t2, t3 = st.columns(3)
+            t1, t2, t3, t4 = st.columns(4, gap="small")
             train_kg = 41 * distance_km / 1000
             bus_kg   = 105 * distance_km / 1000
             t1.metric("🚄 Train", f"{train_kg:.2f} kg")
             t2.metric("🚌 Bus",   f"{bus_kg:.2f} kg")
-            t3.write("")
 
         # Route Map
         st.header("Route Map")
