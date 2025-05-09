@@ -188,26 +188,24 @@ if selected_start and selected_end and st.sidebar.button("Calculate Route"):
         # Estimated Impact Dashboard
         
         st.header("Estimated Impact")
-
-        # Contextual info about per-person budget
         st.info(
             "💡 To halt climate change, the max CO₂ consumption per person per year should be ≈ **600 kg**."
-        )
+        ) #little info box for user 
 
         # Format travel time string
         if duration_min >= 60:
-            h, m = divmod(int(duration_min), 60)
-            travel_str = f"{h}h {m}m"
+            h, m = divmod(int(duration_min), 60)  # divide value by 60 to get travel time in hours and minutes format if above 60min
+            travel_str = f"{h}h {m}m" 
         else:
-            travel_str = f"{duration_min:.0f}m"
+            travel_str = f"{duration_min:.0f}m" # if time is under 60min, just keep it in minutes 
 
-        # Compute liters of fuel for trip if MPG known
+        # Compute liters of fuel for trip if MPG is known 
         trip_L = (
             (235.21 / mpg) * distance_km / 100
             if pd.notna(mpg) and mpg > 0 else np.nan
         )
 
-        # Row of four cards: Distance, Time, Emissions, Fuel
+        # Textboxes with info: Distance, Time, Emissions, Fuel
         labels = ["Distance", "Travel Time", "CO₂ Emissions", "Fuel Consumption"]
         icons = ["📏", "🕒", "💨", "⛽"]
         vals = [
@@ -219,18 +217,18 @@ if selected_start and selected_end and st.sidebar.button("Calculate Route"):
         cards = st.columns(4, gap="small")
         for col, icon, lab, val in zip(cards, icons, labels, vals):
             col.markdown(f"""
-                <div style="
+                <div style=" 
                     padding:20px;
                     background:white;
                     border-radius:8px;
                     box-shadow:0 1px 4px rgba(0,0,0,0.1);
-                    text-align:center;
+                    text-align:center; 
                 ">
                   <div style="font-size:28px;">{icon}</div>
                   <div style="font-size:24px; font-weight:bold; margin:4px 0;">{val}</div>
                   <div style="font-size:14px; color:#666;">{lab}</div>
                 </div>
-            """, unsafe_allow_html=True)
+            """, unsafe_allow_html=True) #box designing 
 # ---------------- MANU -----------------------------------------------------------------------
         # Add vertical spacing before next cards row
         st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
