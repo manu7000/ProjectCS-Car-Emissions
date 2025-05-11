@@ -19,53 +19,59 @@ st.set_page_config(
 # UTILITY FUNCTIONS ---- YANNICK -----
 # -----------------------------------
 
+# This decorator tells Streamlit to cache the function output to speed things up if it's called again
 @st.cache_data
 def load_vehicle_data(path: str) -> pd.DataFrame:
     """
     Load and clean vehicle dataset from a CSV file.
     Drops rows missing critical fields.
     """
-    df = pd.read_csv(path, sep=";", encoding="utf-8-sig", engine="python")
-    df.columns = df.columns.str.strip().str.replace(" ", "_")
-    return df.dropna(
+    df = pd.read_csv(path, sep=";", encoding="utf-8-sig", engine="python")     # Read the CSV file into a DataFrame (like a spreadsheet in code)
+    df.columns = df.columns.str.strip().str.replace(" ", "_")    # Clean up column names: remove spaces and replace them with underscores
+    return df.dropna(    # Drop rows where critical information is missing
         subset=[
-            "Make",
-            "Fuel_Type1",
-            "Model",
-            "Year",
-            "Co2__Tailpipe_For_Fuel_Type1"
+            "Make",     # Car brand (e.g., Toyota)
+            "Fuel_Type1",    # Fuel type (e.g., Gasoline)
+            "Model",     # Car model (e.g., Corolla)
+            "Year",    # Year the car was made
+            "Co2__Tailpipe_For_Fuel_Type1"    # CO2 emissions info
         ]
     )
 
+# This caches the machine learning model so it doesn't get retrained every time
 @st.cache_resource
-def train_model(df: pd.DataFrame):
+def train_model(df: pd.DataFrame):  # Convert fuel type (a word) into numbers the model can understand
     """
     Train a Decision Tree on known vehicles to predict CO2 for custom entries.
     Returns the trained model and the label encoder.
     """
+    # Remove rows where key data is missing
     data = df.dropna(
-        subset=["Fuel_Type1", "Cylinders", "Year", "Co2__Tailpipe_For_Fuel_Type1"]
+        subset=["Fuel_Type1", "Cylinders", "Year", "Co2__Tailpipe_For_Fuel_Type1"]   
     ).copy()
+    # Convert fuel type (a word) into numbers the model can understand
     le = LabelEncoder()
     data["Fuel_Type1_Encoded"] = le.fit_transform(data["Fuel_Type1"])
-    X = data[["Fuel_Type1_Encoded", "Cylinders", "Year"]]
-    y = data["Co2__Tailpipe_For_Fuel_Type1"]
-    model = DecisionTreeRegressor(random_state=42)
-    model.fit(X, y)
-    return model, le
+    X = data[["Fuel_Type1_Encoded", "Cylinders", "Year"]]     # Set the input features (fuel type, cylinder count, year)
+    y = data["Co2__Tailpipe_For_Fuel_Type1"]    # Set the output we want to predict (CO2 emissions)
+    model = DecisionTreeRegressor(random_state=42)     # Create the Decision Tree model
+    model.fit(X, y)    # Train the model using our data
+    return model, le    # Return both the trained model and the encoder
 
 def predict_co2_emission(model, le, fuel_type, cylinders, year) -> float:
     """
     Given user-specified fuel type, cylinder count, and year,
     predict CO2 tailpipe emissions using the trained model.
     """
+    # Create a small DataFrame (1 row) with the user's car details
     inp = pd.DataFrame(
         [[fuel_type, cylinders, year]],
         columns=["Fuel_Type1", "Cylinders", "Year"]
     )
+    # Encode the fuel type so the model understands it
     inp["Fuel_Type1_Encoded"] = le.transform(inp["Fuel_Type1"])
-    return model.predict(inp[["Fuel_Type1_Encoded", "Cylinders", "Year"]])[0]
-
+     # Ask the model to predict the CO2 emissions for this car
+    return model.predict(inp[["Fuel_Type1_Encoded", "Cylinders", "Year"]])[0]     
 def display_route_map(route: dict):
     """
     Render the route geometry on a PyDeck map.
@@ -73,34 +79,37 @@ def display_route_map(route: dict):
     """
     # Prepare coordinate DataFrame
     coords = [[lat, lon] for lon, lat in route["geometry"]]
-    df = pd.DataFrame(coords, columns=["lat", "lon"])
+    df = pd.DataFrame(coords, columns=["lat", "lon"])    # Put the coordinates into a DataFrame so PyDeck can use them
+    
+    # Create new columns with the next point in the route, to draw lines between points
     df["lon_next"] = df["lon"].shift(-1)
     df["lat_next"] = df["lat"].shift(-1)
-    df = df.dropna()
+    df = df.dropna() # Remove any rows with missing data
 
     # Center map
-    center_lat = (df["lat"].min() + df["lat"].max()) / 2
-    center_lon = (df["lon"].min() + df["lon"].max()) / 2
+    center_lat = (df["lat"].min() + df["lat"].max()) / 2    # Find the center point of the route for zooming the map correctly for latitude
+    center_lon = (df["lon"].min() + df["lon"].max()) / 2    # Find the center point of the route for zooming the map correctly for longitude
     view = pdk.ViewState(latitude=center_lat, longitude=center_lon, zoom=7)
 
     # Line layer for route
-    layer = pdk.Layer(
-        "LineLayer",
-        data=df,
-        get_source_position=["lon", "lat"],
-        get_target_position=["lon_next", "lat_next"],
-        get_color=[0, 0, 255],
-        get_width=4
+    layer = pdk.Layer(   
+        "LineLayer",    # This tells PyDeck to draw lines
+        data=df,     # Use our route data
+        get_source_position=["lon", "lat"],    # Start of each line
+        get_target_position=["lon_next", "lat_next"],    # End of each line
+        get_color=[0, 0, 255],    # Blue lines (RGB)
+        get_width=4     # Line thickness
     )
 
+    # Show the map on the Streamlit app
     st.pydeck_chart(
         pdk.Deck(
-            layers=[layer],
-            initial_view_state=view,
-            map_style="mapbox://styles/mapbox/satellite-streets-v11"
+            layers=[layer],     # The route drawing layer
+            initial_view_state=view,     # The map's center and zoom level
+            map_style="mapbox://styles/mapbox/satellite-streets-v11"     # Map appearance
         )
     )
-
+    
 # -----------------------------------
 # UI LAYOUT: HEADER + SIDEBAR ----- KAIS-------
 # -----------------------------------
