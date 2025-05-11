@@ -239,16 +239,16 @@ if selected_start and selected_end and st.sidebar.button("Calculate Route"):
                 </div>
             """, unsafe_allow_html=True) #box designing 
 # ---------------- MANU -----------------------------------------------------------------------
-        # Add vertical spacing before next cards row
-        st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)  # Add vertical spacing before next cards row
+        
+        g1, g2 = st.columns(2, gap="small")     # Create two columns for displaying GHG score (g1) and public transport emissions (g2)
 
-        # Second row: GHG score & public transport comparison
-        g1, g2 = st.columns(2, gap="small")
-
-        # GHG score card (always shown)
+        # GHG score card
         with g1:
-            if pd.notna(ghg_score):
-                col = "#2ECC71" if ghg_score >= 8 else "#F39C12" if ghg_score >= 5 else "#E74C3C"
+            if pd.notna(ghg_score):     # Check if a GHG score exists for the selected car
+                col = "#2ECC71" if ghg_score >= 8 else "#F39C12" if ghg_score >= 5 else "#E74C3C"   # Determine color based on GHG score (green = good, orange = average, red = poor)
+                
+                # Display the GHG score as a colored card
                 g1.markdown(f"""
                     <div style="
                         padding:20px;
@@ -262,7 +262,7 @@ if selected_start and selected_end and st.sidebar.button("Calculate Route"):
                     </div>
                 """, unsafe_allow_html=True)
             else:
-                # Fallback when no score
+                # Display fallback message when no GHG score exists
                 g1.markdown(f"""
                     <div style="
                         padding:20px;
@@ -281,8 +281,10 @@ if selected_start and selected_end and st.sidebar.button("Calculate Route"):
         # Public transport card (only if checkbox)
         with g2:
             if compare_public_transport:
-                train_kg = 41 * distance_km / 1000
-                bus_kg = 105 * distance_km / 1000
+                train_kg = 41 * distance_km / 1000  # 41g CO2/km as benchmark (source: EEA), /1000 to get kg
+                bus_kg = 105 * distance_km / 1000   # 105g CO2/km as benchmark (source: EEA), /1000 to get kg
+                
+                # Display emissions comparison card
                 g2.markdown(f"""
                     <div style="
                         padding:20px;
@@ -299,11 +301,12 @@ if selected_start and selected_end and st.sidebar.button("Calculate Route"):
                       </div>
                     </div>
                 """, unsafe_allow_html=True)
-
-        # Add extra space before the info box about percent changes
+        
+        # Info box about public transport emissions reduction percentages (only if checkbox)
         if compare_public_transport:
-            st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
-            # Calculate percentage savings
+            st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)  # Add extra space before the info box about percent changes
+            
+            # Calculate percentage of emissions reduction by taking train and bus compared to car
             percent_train = (
                 (car_emission_kg - train_kg) / car_emission_kg * 100
                 if car_emission_kg > train_kg else 0
@@ -312,6 +315,8 @@ if selected_start and selected_end and st.sidebar.button("Calculate Route"):
                 (car_emission_kg - bus_kg) / car_emission_kg * 100
                 if car_emission_kg > bus_kg else 0
             )
+            
+            # Display calculated savings percentages in an info box
             st.info(
                 f"🚄 Taking the train would reduce emissions by {percent_train:.1f}%\n\n"
                 f"🚌 Taking the bus would reduce emissions by {percent_bus:.1f}%"
@@ -321,8 +326,9 @@ if selected_start and selected_end and st.sidebar.button("Calculate Route"):
         # 4) Route Map
         # -----------------------------------
         st.header("Route Map")
-        display_route_map(route)
+        display_route_map(route)    # Display route map using the calculated route
 
+    # Display error message if no route found
     except Exception as e:
         st.error("❌ An error occurred during route calculation.")
         st.exception(e)
