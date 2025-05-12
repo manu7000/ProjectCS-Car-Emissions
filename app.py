@@ -175,55 +175,54 @@ else:
 # Option to compare public transport
 compare_public_transport = st.sidebar.checkbox("Compare with public transport")  # checkbox for bus/train comparison
 # -----------------------------------
-# MAIN LOGIC: CALCULATION + DISPLAY ----- AYMERIC -------
+# HAUPTLOGIK: BERECHNUNG UND ANZEIGE ----- AYMERIC -------
 # -----------------------------------
 if selected_start and selected_end and st.sidebar.button("Calculate Route"):
     try:
-        # Compute route info via OpenRouteService
-        with st.spinner("Calculating route and emissions..."): # spinning circle while loading results 
+        # Berechne Routendaten über OpenRouteService
+        with st.spinner("Calculating route and emissions..."): # Ladeanimation während der Berechnung
             sc = get_coordinates(selected_start) 
             ec = get_coordinates(selected_end)
-            route = get_route_info(sc, ec) #  naming openrouteservices function to calculate the route based on the given adresses
-        distance_km = route["distance_km"] # km distance from openroute services 
-        duration_min = route["duration_min"] # min duration from openrouteservices 
+            route = get_route_info(sc, ec) # Ruft OpenRouteService-Funktion auf, um die Route für die angegebenen Adressen zu berechnen
+        distance_km = route["distance_km"] # km-Distanz von OpenRouteService
+        duration_min = route["duration_min"] # min Dauer von OpenRouteService
 
-        # Retrieve CO₂ and MPG (miles per gallon) data
+        # Hole CO₂- und MPG-(Meilen pro Gallone)-Daten
         row = final_row.iloc[0] if not car_not_listed else final_row 
-        co2_g_mile = row["Co2__Tailpipe_For_Fuel_Type1"] # search the CO2 value of the selected car  
-        mpg = row.get("Combined_Mpg_For_Fuel_Type1", np.nan) # get mpg value if available, otherwise not a number (nan) 
-        ghg_score = row.get("GHG_Score", np.nan) # retrieve the GHG score if available, otherwise not a number (nan)  
-        car_emission_kg = (co2_g_mile / 1.60934) * distance_km / 1000 # calculate the kg emission: 1 mile = 1.60934 km and /1000 to get kg
+        co2_g_mile = row["Co2__Tailpipe_For_Fuel_Type1"] # Suche CO₂-Wert für das ausgewählte Auto
+        mpg = row.get("Combined_Mpg_For_Fuel_Type1", np.nan) # Hole MPG-Wert, falls verfügbar, sonst NaN
+        ghg_score = row.get("GHG_Score", np.nan) # Hole GHG-Score, falls verfügbar, sonst NaN
+        car_emission_kg = (co2_g_mile / 1.60934) * distance_km / 1000 # Berechne Emission in kg: 1 Meile = 1,60934 km und /1000 für kg
 
-        # Estimated Impact Dashboard
-        
+        # Geschätzte Auswirkungen
         st.header("Estimated Impact")
         st.info(
             "💡 To halt climate change, the max CO₂ consumption per person per year should be ≈ **600 kg**."
-        ) #little info box for user 
+        ) # Kleines Info-Feld für den Nutzer
 
-        # Format travel time string
+        # Reisezeit-String formatieren
         if duration_min >= 60:
-            h, m = divmod(int(duration_min), 60)  # divide value by 60 to get travel time in hours and minutes format if above 60min
+            h, m = divmod(int(duration_min), 60)  # Teile durch 60 für Stunden und Minuten, wenn über 60 Min
             travel_str = f"{h}h {m}m" 
         else:
-            travel_str = f"{duration_min:.0f}m" # if time is under 60min, just keep it in minutes 
+            travel_str = f"{duration_min:.0f}m" # Wenn unter 60 Min, in Minuten belassen
 
-        # Compute liters of fuel for trip if MPG is known 
+        # Berechne Literverbrauch, falls MPG bekannt
         trip_L = (
             (235.21 / mpg) * distance_km / 100
             if pd.notna(mpg) and mpg > 0 else np.nan
         )
 
-        # Textboxes with info: Distance, Time, Emissions, Fuel
+        # Info-Felder: Distanz, Zeit, Emissionen, Kraftstoff
         labels = ["Distance", "Travel Time", "CO₂ Emissions", "Fuel Consumption"]
         icons = ["📏", "🕒", "💨", "⛽"]
         vals = [
             f"{distance_km:.2f} km",
             travel_str,
             f"{car_emission_kg:.2f} kg",
-            f"{trip_L:.2f} L"
+            f"{trip_L:.2f} L" # Rufe die oben berechneten Werte ab und zeige sie mit f-Strings in den Boxen an
         ]
-        cards = st.columns(4, gap="small")
+        cards = st.columns(4, gap="small") # Erzeuge eine Reihe von vier gestalteten Karten  
         for col, icon, lab, val in zip(cards, icons, labels, vals):
             col.markdown(f"""
                 <div style=" 
@@ -237,7 +236,7 @@ if selected_start and selected_end and st.sidebar.button("Calculate Route"):
                   <div style="font-size:24px; font-weight:bold; margin:4px 0;">{val}</div>
                   <div style="font-size:14px; color:#666;">{lab}</div>
                 </div>
-            """, unsafe_allow_html=True) #box designing 
+            """, unsafe_allow_html=True) # Box-Gestaltung 
 # ---------------- MANU -----------------------------------------------------------------------
         st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)  # Add vertical spacing before next cards row
         
