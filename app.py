@@ -123,13 +123,13 @@ start_input = st.sidebar.text_input("From:")  #text box for departure address
 selected_start = st.sidebar.selectbox(  
     "Select starting location:",  
     autocomplete_address(start_input)  
-) if start_input else None  #show autocomplete dropdown only after typing. Only show the sropdown if there is an input
+) if start_input else None  #show autocomplete dropdown only after typing. Only show the dropdown if there is an input
 
 end_input = st.sidebar.text_input("To:")  #text box for destination address
 selected_end = st.sidebar.selectbox(  
     "Select destination:",  
     autocomplete_address(end_input)  
-) if end_input else None  # show autocomplete dropdown only after typing. Only show the sropdown if there is an input
+) if end_input else None  # show autocomplete dropdown only after typing. Only show the dropdown if there is an input
 
 # Load and train vehicle data
 try:  
