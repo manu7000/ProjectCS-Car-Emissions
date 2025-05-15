@@ -183,7 +183,7 @@ if selected_start and selected_end and st.sidebar.button("Calculate Route"):
             ec = get_coordinates(selected_end)
             route = get_route_info(sc, ec) # Ruft OpenRouteService-Funktion auf, um die Route für die angegebenen Adressen zu berechnen
         if route is None:
-            print("Failed to get route info from OpenRouteService.")
+            print(f"Failed to get route info from OpenRouteService.")
             distance_km = 0
             duration_min = 0
         else:
