@@ -1,7 +1,7 @@
 import openrouteservice
 from openrouteservice import exceptions
 
-# Initialize OpenRouteService client with API key
+# OpenRouteService-Client mit API-Schlüssel initialisieren
 client = openrouteservice.Client(key='5b3ce3597851110001cf624863c2387f20a145d69082b4da269112fa')
 
 def get_coordinates(address):
@@ -61,15 +61,15 @@ def get_route_info(start_coords, end_coords):
     try:
         route = client.directions(
             coordinates=[start_coords, end_coords],
-            profile='driving-car',     # Mode of transport
-            format='geojson'           # Output format
+            profile='driving-car',     # Verkehrsmittel
+            format='geojson'           # Ausgabeformat
         )
         segment = route['features'][0]['properties']['segments'][0]
         geometry = route['features'][0]['geometry']['coordinates']
         return {
-            "distance_km": segment['distance'] / 1000,     # Convert meters to kilometers
-            "duration_min": segment['duration'] / 60,      # Convert seconds to minutes
-            "geometry": geometry                           # List of [lon, lat] points along the route
+            "distance_km": segment['distance'] / 1000,     # Meter in Kilometer umrechnen
+            "duration_min": segment['duration'] / 60,      # Sekunden in Minuten umrechnen
+            "geometry": geometry                           # Liste der [lon, lat]-Punkte entlang der Route
         }
     except exceptions.ApiError as e:
         print(f"OpenRouteService API Error: {e}")
