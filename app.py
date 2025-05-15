@@ -81,8 +81,8 @@ def display_route_map(route: dict):
     Expects 'geometry' key: list of [lon, lat] points.
     """
     if route is None:
-        print("Route data is missing or invalid. Cannot display map.")
-        return
+        st.error("Unable to retrieve a route. Please check the addresses and try again.")
+        st.stop()
     # Bereite das Koordinaten-DataFrame vor
     coords = [[lat, lon] for lon, lat in route["geometry"]]
     df = pd.DataFrame(coords, columns=["lat", "lon"])    # Lege die Koordinaten in ein DataFrame, damit PyDeck sie nutzen kann
