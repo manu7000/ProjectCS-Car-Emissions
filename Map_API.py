@@ -1,8 +1,9 @@
+import streamlit as st
 import openrouteservice
 from openrouteservice import exceptions
 
 # OpenRouteService-Client mit API-Schlüssel initialisieren
-client = openrouteservice.Client(key='5b3ce3597851110001cf624863c2387f20a145d69082b4da269112fa')
+client = openrouteservice.Client(key=st.secrets["API_KEY"])
 
 def get_coordinates(address):
     """
