@@ -1,8 +1,5 @@
 import streamlit as st
 import pandas as pd
-import pydeck as pdk
-from sklearn.tree import DecisionTreeRegressor
-from sklearn.preprocessing import LabelEncoder
 import numpy as np
 from Map_API import autocomplete_address, get_coordinates, get_route_info
 from ml_utils import train_model, predict_co2_emission
