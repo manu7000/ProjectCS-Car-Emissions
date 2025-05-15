@@ -113,7 +113,6 @@ if selected_start and selected_end and st.sidebar.button("Calculate Route"):
             if pd.notna(mpg) and mpg > 0 else np.nan
         )
 
-#--------------------------------------------------------------------------------------------------------------------GPT ?????????
         # Info-Felder
         labels = ["Distance", "Travel Time", "CO₂ Emissions", "Fuel Consumption"]
         icons = ["📏", "🕒", "💨", "⛽"]
@@ -143,8 +142,6 @@ if selected_start and selected_end and st.sidebar.button("Calculate Route"):
         
         g1, g2 = st.columns(2, gap="small")     # Erstelle zwei Spalten für Anzeige von GHG-Score (g1) und ÖPNV-Emissionen (g2)
 
-
-        #--------------------------------------------------------------------------------------------------------------------GPT ?????????
         # GHG-Score-Karte
         with g1:
             if pd.notna(ghg_score):     # Prüfe, ob ein GHG-Score für das gewählte Auto existiert
@@ -241,3 +238,5 @@ st.caption(
     "CS Project by Aymeric, Kaïs, Emmanuel and Yannick. Group 2.06. "
     "Data sources: OpenRouteService, EEA, EPA."
 )
+
+# Entwickelt mit Unterstützung von ChatGPT (OpenAI) für Modularisierung, ML-Integration und API-Handling

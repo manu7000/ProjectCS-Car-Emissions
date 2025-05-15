@@ -27,7 +27,6 @@ def load_vehicle_data(path: str) -> pd.DataFrame:
         ]
     )
 
-#-------------------------------------------------------------------------------------------------GPT??????
 def display_route_map(route: dict):
     """
     Visualize a route using PyDeck with line segments between coordinates.
