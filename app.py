@@ -179,7 +179,11 @@ if selected_start and selected_end and st.sidebar.button("Calculate Route"):
             sc = get_coordinates(selected_start) 
             ec = get_coordinates(selected_end)
             route = get_route_info(sc, ec) # Ruft OpenRouteService-Funktion auf, um die Route für die angegebenen Adressen zu berechnen
-        distance_km = route["distance_km"] # km-Distanz von OpenRouteService
+        if route is None:
+            print("Failed to get route info from OpenRouteService.")
+            distance_km = 0
+        else:
+            distance_km = route["distance_km"]
         duration_min = route["duration_min"] # min Dauer von OpenRouteService
 
         # Hole CO₂- und MPG-(Meilen pro Gallone)-Daten
