@@ -5,6 +5,8 @@ from sklearn.tree import DecisionTreeRegressor
 from sklearn.preprocessing import LabelEncoder
 import numpy as np
 from Map_API import autocomplete_address, get_coordinates, get_route_info
+from ml_utils import train_model, predict_co2_emission
+from utils import load_vehicle_data, display_route_map
 
 # SEITENKONFIGURATION
 st.set_page_config(
@@ -16,127 +18,6 @@ st.set_page_config(
 # Titel
 st.title("Car Journey CO₂ Emission Calculator")  # Haupttitel der App anzeigen
 st.write("Welcome! This app will help you calculate and compare the carbon emissions of your trips.")  # Untertitel
-
-
-# HILFSFUNKTIONEN 
-# Dieser Dekorator sagt Streamlit, das Ergebnis der Funktion zwischenzuspeichern, damit es beim erneuten Aufruf schneller geht
-@st.cache_data
-def load_vehicle_data(path: str) -> pd.DataFrame:
-    """
-    Load and clean a vehicle dataset from a CSV file.
-
-    Parameters:
-        path (str): Path to the CSV file.
-
-    Returns:
-        pd.DataFrame: Cleaned DataFrame with essential columns retained.
-    """
-    df = pd.read_csv(path, sep=";", encoding="utf-8-sig", engine="python")     # Lese die CSV-Datei in ein DataFrame (wie eine Tabelle im Code)
-    df.columns = df.columns.str.strip().str.replace(" ", "_")    # Bereinige die Spaltennamen: entferne Leerzeichen und ersetze sie durch Unterstriche
-    return df.dropna(    # Entferne Zeilen, bei denen wichtige Informationen fehlen
-        subset=[
-            "Make",     
-            "Fuel_Type1",   
-            "Model",     
-            "Year",    
-            "Co2__Tailpipe_For_Fuel_Type1"    
-        ]
-    )
-
-# Das speichert das Machine-Learning-Modell im Cache, damit es nicht jedes Mal neu trainiert wird
-@st.cache_resource
-def train_model(df: pd.DataFrame):  # Wandle Kraftstoffart (ein Wort) in Zahlen um, die das Modell versteht
-    """
-    Train a Decision Tree Regressor on vehicle data to predict CO2 emissions.
-
-    Parameters:
-        df (pd.DataFrame): Cleaned vehicle dataset.
-
-    Returns:
-        model (DecisionTreeRegressor): Trained decision tree model.
-        le (LabelEncoder): Label encoder for fuel type.
-    """
-    # Entferne Zeilen, bei denen wichtige Daten fehlen
-    data = df.dropna(
-        subset=["Fuel_Type1", "Cylinders", "Year", "Co2__Tailpipe_For_Fuel_Type1"]   
-    ).copy()
-    # Wandle Kraftstoffart (ein Wort) in Zahlen um, die das Modell versteht
-    le = LabelEncoder()
-    data["Fuel_Type1_Encoded"] = le.fit_transform(data["Fuel_Type1"])
-    X = data[["Fuel_Type1_Encoded", "Cylinders", "Year"]]     # Setze die Eingabemerkmale (Kraftstoff, Zylinderanzahl, Baujahr)
-    y = data["Co2__Tailpipe_For_Fuel_Type1"]    # Setze das Ziel, das wir vorhersagen wollen (CO2-Ausstoß)
-    model = DecisionTreeRegressor(random_state=42)     # Erstelle das Decision-Tree-Modell
-    model.fit(X, y)    # Trainiere das Modell mit unseren Daten
-    return model, le    # Gib das trainierte Modell und den Encoder zurück
-
-def predict_co2_emission(model, le, fuel_type, cylinders, year) -> float:
-    """
-    Predict CO2 emissions based on user input using the trained model.
-
-    Parameters:
-        model: Trained DecisionTreeRegressor.
-        le: LabelEncoder for encoding fuel types.
-        fuel_type (str): Type of fuel.
-        cylinders (int): Number of engine cylinders.
-        year (int): Vehicle model year.
-
-    Returns:
-        float: Predicted CO2 emission value.
-    """
-    # Erstelle ein kleines DataFrame (1 Zeile) mit den Autodaten des Nutzers
-    inp = pd.DataFrame(
-        [[fuel_type, cylinders, year]],
-        columns=["Fuel_Type1", "Cylinders", "Year"]
-    )
-    # Verschlüssele die Kraftstoffart, damit das Modell sie versteht
-    inp["Fuel_Type1_Encoded"] = le.transform(inp["Fuel_Type1"])
-     # Frage das Modell, den CO2-Ausstoß für dieses Auto vorherzusagen
-    return model.predict(inp[["Fuel_Type1_Encoded", "Cylinders", "Year"]])[0] 
-    
-
-#-------------------------------------------------------------------------------------------------GPT??????
-def display_route_map(route: dict):
-    """
-    Visualize a route using PyDeck with line segments between coordinates.
-
-    Parameters:
-        route (dict): Dictionary containing route geometry with 'geometry' key
-                      as a list of [longitude, latitude] points.
-    """
-    # Bereite das Koordinaten-DataFrame vor
-    coords = [[lat, lon] for lon, lat in route["geometry"]]
-    df = pd.DataFrame(coords, columns=["lat", "lon"])    # Lege die Koordinaten in ein DataFrame, damit PyDeck sie nutzen kann
-    
-    # Erstelle neue Spalten mit dem nächsten Punkt auf der Route, um Linien zwischen den Punkten zu zeichnen
-    df["lon_next"] = df["lon"].shift(-1)
-    df["lat_next"] = df["lat"].shift(-1)
-    df = df.dropna() # Entferne alle Zeilen mit fehlenden Daten
-
-    # Karte zentrieren
-    center_lat = (df["lat"].min() + df["lat"].max()) / 2    # Finde den Mittelpunkt der Route für korrekten Zoom (Breite)
-    center_lon = (df["lon"].min() + df["lon"].max()) / 2    # Finde den Mittelpunkt der Route für korrekten Zoom (Länge)
-    view = pdk.ViewState(latitude=center_lat, longitude=center_lon, zoom=7)
-
-    # Linien-Layer für Route
-    layer = pdk.Layer(   
-        "LineLayer",    # Sagt PyDeck, Linien zu zeichnen
-        data=df,     # Nutze unsere Routendaten
-        get_source_position=["lon", "lat"],    # Start jeder Linie
-        get_target_position=["lon_next", "lat_next"],    # Ende jeder Linie
-        get_color=[0, 0, 255],    # Blaue Linien (RGB)
-        get_width=4     # Liniendicke
-    )
-
-    # Zeige die Karte in der Streamlit-App
-    st.pydeck_chart(
-        pdk.Deck(
-            layers=[layer],     # Der Layer zum Zeichnen der Route
-            initial_view_state=view,     # Mittelpunkt und Zoomstufe der Karte
-            map_style="mapbox://styles/mapbox/satellite-streets-v11"     # Kartenstil
-        )
-    )
-    
-    
 
 # Seitenleiste: Eingabe der Reisedaten
 st.sidebar.header("Enter your trip information")  # Überschrift für den Seitenleistenabschnitt
@@ -202,7 +83,7 @@ if selected_start and selected_end and st.sidebar.button("Calculate Route"):
             sc = get_coordinates(selected_start) 
             ec = get_coordinates(selected_end)
             route = get_route_info(sc, ec) # Ruft OpenRouteService-Funktion auf, um die Route für die angegebenen Adressen zu berechnen
-        if route is None:
+        if route is None:   # Wenn keine Route abgerufen werden konnte (API-Fehler), wird eine Fehlermeldung angezeigt und die Ausführung beendet.
             st.error("❌ Unable to retrieve a route. Please check the addresses and try again.")
             st.stop()
         else:
@@ -348,7 +229,6 @@ if selected_start and selected_end and st.sidebar.button("Calculate Route"):
 
         
         # Routenkartenanzeige
-
         st.header("Route Map")
         display_route_map(route)    # Zeige die Routenkarte mit der berechneten Route an
 
