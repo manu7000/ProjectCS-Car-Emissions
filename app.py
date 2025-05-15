@@ -182,9 +182,10 @@ if selected_start and selected_end and st.sidebar.button("Calculate Route"):
         if route is None:
             print("Failed to get route info from OpenRouteService.")
             distance_km = 0
+            duration_min = 0
         else:
             distance_km = route["distance_km"]
-        duration_min = route["duration_min"] # min Dauer von OpenRouteService
+            duration_min = route["duration_min"] # min Dauer von OpenRouteService
 
         # Hole CO₂- und MPG-(Meilen pro Gallone)-Daten
         row = final_row.iloc[0] if not car_not_listed else final_row 
