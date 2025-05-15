@@ -81,7 +81,7 @@ def display_route_map(route: dict):
     Expects 'geometry' key: list of [lon, lat] points.
     """
     if route is None:
-        st.error("Route data is missing or invalid. Cannot display map.")
+        print("Route data is missing or invalid. Cannot display map.")
         return
     # Bereite das Koordinaten-DataFrame vor
     coords = [[lat, lon] for lon, lat in route["geometry"]]
