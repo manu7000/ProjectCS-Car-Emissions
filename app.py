@@ -23,8 +23,13 @@ st.write("Welcome! This app will help you calculate and compare the carbon emiss
 @st.cache_data
 def load_vehicle_data(path: str) -> pd.DataFrame:
     """
-    Load and clean vehicle dataset from a CSV file.
-    Drops rows missing critical fields.
+    Load and clean a vehicle dataset from a CSV file.
+
+    Parameters:
+        path (str): Path to the CSV file.
+
+    Returns:
+        pd.DataFrame: Cleaned DataFrame with essential columns retained.
     """
     df = pd.read_csv(path, sep=";", encoding="utf-8-sig", engine="python")     # Lese die CSV-Datei in ein DataFrame (wie eine Tabelle im Code)
     df.columns = df.columns.str.strip().str.replace(" ", "_")    # Bereinige die Spaltennamen: entferne Leerzeichen und ersetze sie durch Unterstriche
@@ -42,8 +47,14 @@ def load_vehicle_data(path: str) -> pd.DataFrame:
 @st.cache_resource
 def train_model(df: pd.DataFrame):  # Wandle Kraftstoffart (ein Wort) in Zahlen um, die das Modell versteht
     """
-    Train a Decision Tree on known vehicles to predict CO2 for custom entries.
-    Returns the trained model and the label encoder.
+    Train a Decision Tree Regressor on vehicle data to predict CO2 emissions.
+
+    Parameters:
+        df (pd.DataFrame): Cleaned vehicle dataset.
+
+    Returns:
+        model (DecisionTreeRegressor): Trained decision tree model.
+        le (LabelEncoder): Label encoder for fuel type.
     """
     # Entferne Zeilen, bei denen wichtige Daten fehlen
     data = df.dropna(
@@ -60,8 +71,17 @@ def train_model(df: pd.DataFrame):  # Wandle Kraftstoffart (ein Wort) in Zahlen 
 
 def predict_co2_emission(model, le, fuel_type, cylinders, year) -> float:
     """
-    Given user-specified fuel type, cylinder count, and year,
-    predict CO2 tailpipe emissions using the trained model.
+    Predict CO2 emissions based on user input using the trained model.
+
+    Parameters:
+        model: Trained DecisionTreeRegressor.
+        le: LabelEncoder for encoding fuel types.
+        fuel_type (str): Type of fuel.
+        cylinders (int): Number of engine cylinders.
+        year (int): Vehicle model year.
+
+    Returns:
+        float: Predicted CO2 emission value.
     """
     # Erstelle ein kleines DataFrame (1 Zeile) mit den Autodaten des Nutzers
     inp = pd.DataFrame(
@@ -77,8 +97,11 @@ def predict_co2_emission(model, le, fuel_type, cylinders, year) -> float:
 #-------------------------------------------------------------------------------------------------GPT??????
 def display_route_map(route: dict):
     """
-    Render the route geometry on a PyDeck map.
-    Expects 'geometry' key: list of [lon, lat] points.
+    Visualize a route using PyDeck with line segments between coordinates.
+
+    Parameters:
+        route (dict): Dictionary containing route geometry with 'geometry' key
+                      as a list of [longitude, latitude] points.
     """
     # Bereite das Koordinaten-DataFrame vor
     coords = [[lat, lon] for lon, lat in route["geometry"]]
