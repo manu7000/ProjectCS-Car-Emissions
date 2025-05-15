@@ -35,5 +35,5 @@ def get_route_info(start_coords, end_coords):
         }
     except exceptions.ApiError as e:
         print(f"OpenRouteService API Error: {e}")
-        return None 
+        return 0 
 
