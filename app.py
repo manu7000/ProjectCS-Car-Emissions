@@ -81,8 +81,8 @@ def display_route_map(route: dict):
     Expects 'geometry' key: list of [lon, lat] points.
     """
     if route is None:
-        st.error("Unable to retrieve a route. Please check the addresses and try again.")
-        st.stop()
+        print("Route data is missing or invalid. Cannot display map.")
+        return
     # Bereite das Koordinaten-DataFrame vor
     coords = [[lat, lon] for lon, lat in route["geometry"]]
     df = pd.DataFrame(coords, columns=["lat", "lon"])    # Lege die Koordinaten in ein DataFrame, damit PyDeck sie nutzen kann
@@ -183,9 +183,8 @@ if selected_start and selected_end and st.sidebar.button("Calculate Route"):
             ec = get_coordinates(selected_end)
             route = get_route_info(sc, ec) # Ruft OpenRouteService-Funktion auf, um die Route für die angegebenen Adressen zu berechnen
         if route is None:
-            st.exception()
-            distance_km = 0
-            duration_min = 0
+            st.error("Unable to retrieve a route. Please check the addresses and try again.")
+            st.stop()
         else:
             distance_km = route["distance_km"]
             duration_min = route["duration_min"] # min Dauer von OpenRouteService
